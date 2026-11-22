@@ -1,6 +1,10 @@
 name: Publish M32 Setup
 
 on:
+  push:
+    branches:
+      - UAT
+      - main
   workflow_dispatch:
     inputs:
       target:
@@ -8,12 +12,12 @@ on:
         required: true
         type: choice
         options:
-          - publish to dev
+          - publish to UAT
           - publish to prod
 
 permissions:
   contents: write
-  actions: read
+  actions: write
   pages: write
   id-token: write
 
@@ -23,17 +27,38 @@ concurrency:
 
 jobs:
   publish:
-    name: ${{ inputs.target }}
+    name: ${{ github.ref == 'refs/heads/UAT' && 'Publish UAT' || 'Publish Production' }}
+    if: >-
+      (github.event_name == 'push' &&
+       (github.ref == 'refs/heads/UAT' || github.ref == 'refs/heads/main')) ||
+      (github.event_name == 'workflow_dispatch' &&
+       ((inputs.target == 'publish to UAT' && github.ref == 'refs/heads/UAT') ||
+        (inputs.target == 'publish to prod' && github.ref == 'refs/heads/main')))
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      target: ${{ steps.target.outputs.value }}
     steps:
+      - name: Determine publication target
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            if [[ "${GITHUB_REF}" == "refs/heads/UAT" ]]; then
+              echo "value=publish to UAT" >> "$GITHUB_OUTPUT"
+            else
+              echo "value=publish to prod" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "value=${{ inputs.target }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check out source
         uses: actions/checkout@v7
 
-      # Keep gh-pages as a durable archive of the published site so that
-      # previous production versions survive subsequent Pages deployments.
       - name: Check out published-site archive
         uses: actions/checkout@v7
         with:
@@ -45,6 +70,8 @@ jobs:
 
       - name: Assemble site
         shell: bash
+        env:
+          TARGET: ${{ steps.target.outputs.value }}
         run: |
           set -euo pipefail
           mkdir -p site
@@ -53,9 +80,12 @@ jobs:
             rsync -a --exclude='.git/' previous-site/ site/
           fi
 
-          if [[ "${{ inputs.target }}" == "publish to dev" ]]; then
-            mkdir -p site/dev
-            cp index.html app.js styles.css site/dev/
+          # The old /dev/ address is retired; UAT now lives at /uat/.
+          rm -rf site/dev
+
+          if [[ "$TARGET" == "publish to UAT" ]]; then
+            mkdir -p site/uat
+            cp index.html app.js styles.css site/uat/
           else
             VERSION="v$(date -u +'%Y.%m.%d')-${GITHUB_RUN_NUMBER}"
             cp index.html app.js styles.css site/
@@ -88,17 +118,18 @@ jobs:
         shell: bash
         env:
           SITE_URL: ${{ steps.deployment.outputs.page_url }}
+          TARGET: ${{ steps.target.outputs.value }}
         run: |
           set -euo pipefail
           SITE_URL="${SITE_URL%/}"
 
-          if [[ "${{ inputs.target }}" == "publish to dev" ]]; then
-            PUBLISHED_URL="${SITE_URL}/dev/"
+          if [[ "$TARGET" == "publish to UAT" ]]; then
+            PUBLISHED_URL="${SITE_URL}/uat/"
             {
               echo "## M32 Setup published"
               echo
-              echo "- **Target:** Development"
-              echo "- **Published app:** [Open development build](${PUBLISHED_URL})"
+              echo "- **Target:** UAT"
+              echo "- **Published app:** [Open UAT build](${PUBLISHED_URL})"
             } >> "$GITHUB_STEP_SUMMARY"
           else
             VERSION_URL="${SITE_URL}/versions/${VERSION}/"
@@ -111,3 +142,38 @@ jobs:
               echo "- **Current production app:** [Open production site](${SITE_URL}/)"
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  sync-main-to-uat:
+    name: Merge main into UAT and publish UAT
+    needs: publish
+    if: >-
+      needs.publish.result == 'success' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Merge main into UAT
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin UAT
+          git checkout -B UAT origin/UAT
+          git merge --no-edit origin/main
+          git push origin UAT
+
+      - name: Trigger UAT publication
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/publish.yml/dispatches" \
+            -f ref=UAT \
+            -f 'inputs[target]=publish to UAT'
