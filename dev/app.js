@@ -63,6 +63,47 @@ $("export-config").onclick=()=>{config.metadata.exportedAt=new Date().toISOStrin
 $("import-config").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const candidate=JSON.parse(await f.text());validate(candidate);const summary=candidate.library.length+" library sources, "+candidate.stage.stageboxes.length+" stageboxes, "+candidate.stage.patchPanels.length+" patch panels and "+candidate.service.assignments.length+" service assignments";if(!confirm("Import this complete configuration?\n\n"+summary+"\n\nThis replaces the current browser workspace."))return;config=candidate;render();alert("Configuration imported and saved locally.")}catch(err){alert("Import rejected. Your current workspace has not been changed.\n\n"+err.message)}finally{e.target.value=""}};
 $("reset-config").onclick=()=>{if(!confirm("Reset the entire local workspace? Export a backup first if you need to keep it."))return;config=fresh();localStorage.removeItem(STORE);render()};
 $("scene-file").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;const txt=await f.text(),lines=txt.split(/\r?\n/),channels=[],buses=[],dcas=[],outputs=[];let title=f.name,version="";const h=lines.find(x=>x.startsWith("#"));const hm=h?.match(/^#([^#]+)#\s+"([^"]*)"/);if(hm){version=hm[1];title=hm[2]||title}for(const line of lines){let m;if(m=line.match(/^\/ch\/(\d{2})\/config\s+"([^"]*)"\s*(.*)$/))channels.push({n:+m[1],name:m[2]});else if(m=line.match(/^\/bus\/(\d{2})\/config\s+"([^"]*)"/))buses.push(m[2]);else if(m=line.match(/^\/dca\/(\d+)\/config\s+"([^"]*)"/))dcas.push(m[2]);else if(m=line.match(/^\/outputs\/(main|aux|p16|aes|rec)\/(\d{2})\s+(.+)$/))outputs.push(m[0])}scene={filename:f.name,title,version,channels,buses,dcas,outputs};$("scene-summary").textContent=f.name+" · format "+(version||"unknown")+" · "+channels.length+" input channels · "+buses.length+" buses · "+dcas.length+" DCAs · "+outputs.length+" output routes";$("scene-details").innerHTML='<div class="scroll"><table><thead><tr><th>Desk channel</th><th>Scene name</th></tr></thead><tbody>'+channels.map(c=>'<tr><td>CH '+String(c.n).padStart(2,"0")+'</td><td>'+esc(c.name)+'</td></tr>').join("")+'</tbody></table></div>';config.sceneReference={filename:f.name,title,version};persist()};
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
+// Temporary navigation diagnostics. All messages use the [M32 debug] prefix.
+document.addEventListener("click",e=>{
+  const control=e.target.closest("a,button,[role='link'],[role='tab']");
+  if(!control)return;
+  const isNav=control.matches(".tab,[role='tab'],a");
+  if(!isNav)return;
+  const info={
+    label:(control.innerText||control.getAttribute("aria-label")||control.title||"").trim(),
+    element:control.tagName.toLowerCase(),
+    tab:control.dataset.tab||null,
+    href:control.getAttribute("href"),
+    target:e.target.tagName.toLowerCase(),
+    defaultPrevented:e.defaultPrevented
+  };
+  console.info("[M32 debug] Navigation click",info);
+  if(control.matches(".tab")&&control.dataset.tab){
+    queueMicrotask(()=>{
+      const panel=$(control.dataset.tab);
+      console.info("[M32 debug] Navigation result",{
+        requestedTab:control.dataset.tab,
+        panelFound:!!panel,
+        panelHidden:panel?panel.hidden:null,
+        activeTab:document.querySelector(".tab.active")?.dataset.tab||null,
+        visiblePanels:[...document.querySelectorAll(".panel")].filter(p=>!p.hidden).map(p=>p.id)
+      });
+    });
+  }
+},true);
+window.addEventListener("error",e=>console.error("[M32 debug] JavaScript error",{
+  message:e.message,source:e.filename,line:e.lineno,column:e.colno
+}));
+window.addEventListener("unhandledrejection",e=>console.error("[M32 debug] Unhandled promise rejection",e.reason));
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
+  console.info("[M32 debug] Tab handler running",{tab:b.dataset.tab});
+  tab(b.dataset.tab);
+}));
+console.info("[M32 debug] App initialising",{
+  path:location.pathname,
+  tabs:[...document.querySelectorAll(".tab")].map(b=>({label:b.innerText,tab:b.dataset.tab})),
+  panels:[...document.querySelectorAll(".panel")].map(p=>({id:p.id,hidden:p.hidden})),
+  scriptReady:document.readyState
+});
 loadStored();$("service-name").value=config.service.name||"";$("service-date").value=config.service.date||"";render();
 })();
