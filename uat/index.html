@@ -4,10 +4,10 @@
 <body>
 <header><div class="brand">M32</div><div><strong>Service Setup</strong><small>Stage · patching · console</small></div><span id="status" class="status">Local workspace</span></header>
 <main>
-<section class="hero"><div><p class="eyebrow">SERVICE CONFIGURATION WORKSPACE</p><h1>Build the signal path.<br><em>Before the first soundcheck.</em></h1><p>Maintain a reusable source library, lay out stageboxes and patch panels, map physical inputs to desk channels, and keep a portable copy of the complete setup.</p></div><aside><h2>Configuration</h2><p>Saved automatically in this browser. Export a full JSON backup to move it to another device.</p><div class="actions"><button id="export-config" class="primary">Export full configuration ↓</button><label class="file-button">Import configuration ↑<input id="import-config" type="file" accept=".json,application/json"></label></div><small id="save-state">Not saved yet</small></aside></section>
+<section class="hero"><div><p class="eyebrow">SERVICE CONFIGURATION WORKSPACE</p><h1>Build the signal path.<br><em>Before the first soundcheck.</em></h1><p>Maintain a reusable source library, lay out stageboxes, map physical inputs and outputs, and define destination equipment, and keep a portable copy of the complete setup.</p></div><aside><h2>Configuration</h2><p>Saved automatically in this browser. Export a full JSON backup to move it to another device.</p><div class="actions"><button id="export-config" class="primary">Export full configuration ↓</button><label class="file-button">Import configuration ↑<input id="import-config" type="file" accept=".json,application/json"></label></div><small id="save-state">Not saved yet</small></aside></section>
 <section class="toolbar"><div><b>Workspace</b><span> · configuration is independent of the M32 scene file</span></div><button id="reset-config" class="quiet">Reset workspace</button></section>
 <nav class="tabs">
-<button class="tab active" data-tab="service">Service lineup</button><button class="tab" data-tab="library">Source library</button><button class="tab" data-tab="stage">Stage layout</button><button class="tab" data-tab="patching">Input mapping</button><button class="tab" data-tab="console">M32 &amp; scene</button>
+<button class="tab active" data-tab="service">Service lineup</button><button class="tab" data-tab="library">Source library</button><button class="tab" data-tab="stage">Stage layout</button><button class="tab" data-tab="patching">Input mapping</button><button class="tab" data-tab="outputs">Output mapping</button><button class="tab" data-tab="console">M32 &amp; scene</button>
 </nav>
 <section id="service" class="panel">
 <div class="section-head"><div><p class="eyebrow">01 / CURRENT SERVICE</p><h2>Service lineup</h2><p>Select the sources needed for this service. Physical input and desk channel are separate assignments.</p></div></div>
@@ -42,8 +42,22 @@
 <div id="patch-connections" class="patch-matrix"></div>
 <div id="patch-validation" class="notice"></div>
 </section>
+<section id="outputs" class="panel" hidden>
+<div class="section-head"><div><p class="eyebrow">05 / PHYSICAL SIGNAL ROUTING</p><h2>M32 output mapping</h2><p>Define the equipment and systems receiving audio, then map each M32 physical output to its destination. This is separate from input mapping and desk-channel assignments.</p></div></div>
+<div class="signal-flow"><b>M32 physical output</b><i>→</i><b>Destination equipment</b></div>
+<div class="editor output-destination-editor">
+<label>Destination name<input id="output-destination-name" placeholder="e.g. FOH Left"></label>
+<label>Destination type<select id="output-destination-type"><option>FOH</option><option>Monitor</option><option>IEM</option><option>Broadcast</option><option>Recording</option><option>Other</option></select></label>
+<label>Notes<input id="output-destination-notes" placeholder="e.g. Main PA left input"></label>
+<button id="add-output-destination" class="primary">Add destination</button>
+</div>
+<div id="output-destinations" class="cards"></div>
+<div class="section-head output-map-heading"><div><h3>Physical output assignments</h3><p>Available banks: Local XLR 1–16, AES50-A/B 1–48 and Card 1–32. Unused outputs can remain unmapped.</p></div></div>
+<div id="output-mapping-list" class="patch-matrix"></div>
+<div id="output-validation" class="notice"></div>
+</section>
 <section id="console" class="panel" hidden>
-<div class="section-head"><div><p class="eyebrow">05 / CONSOLE REFERENCE</p><h2>M32 scene inspector</h2><p>Optionally load a known-good scene for reference. It stays in this browser; this version does not generate or upload native scene files.</p></div></div>
+<div class="section-head"><div><p class="eyebrow">06 / CONSOLE REFERENCE</p><h2>M32 scene inspector</h2><p>Optionally load a known-good scene for reference. It stays in this browser; this version does not generate or upload native scene files.</p></div></div>
 <div class="scene-upload"><label>Open M32 scene (.scn)<input id="scene-file" type="file" accept=".scn,.txt"></label><div id="scene-summary" class="muted">No scene loaded.</div></div>
 <div id="scene-details"></div><button id="import-scene-sources" class="primary" disabled>Add selected channels to source library</button>
 </section>
