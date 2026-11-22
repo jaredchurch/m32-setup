@@ -1,6 +1,6 @@
 # M32 Service Configuration Workspace
 
-Status: current application design; implementation is in progress.
+Status: current application design; implementation is in progress. The stagebox search, input-mapping search, Aux input-bank support, editable stagebox port counts and initial output-mapping increment have been implemented in UAT.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Provide a reusable planning workspace for an M32 service. The application models
 
 ## Core terminology
 
-- **Physical input:** an M32 input destination, identified by its bank and input number. Supported banks are Local, AES50-A, AES50-B and Card.
+- **Physical input:** an M32 input destination, identified by its bank and input number. Supported banks are Local, AES50-A, AES50-B, Card and Aux (inputs 1–6).
 - **Stagebox:** a named physical input device represented on the stage layout. It has a display name, configurable XLR input sockets, optional RJ45 network sockets, a stage position and notes.
 - **Stagebox input:** an individual XLR socket on a stagebox. Each socket can be labelled and associated with a source.
 - **Input mapping:** the direct assignment from a stagebox XLR socket to an M32 physical input. There is no intermediate patch-panel equipment in the application model.
@@ -50,24 +50,24 @@ The library may contain more items than the 32 desk channels. Only items assigne
 - Provide a top-down stage canvas.
 - Allow users to add, rename and move stageboxes.
 - Configure each stagebox with a name, optional make/model, a configurable number of XLR input sockets and RJ45 network sockets, and optional notes.
-- Stageboxes default to three XLR inputs and three RJ45 sockets.
+- Stageboxes default to three XLR inputs and three RJ45 sockets; users can edit both port counts after creation.
 - Each XLR socket can have a meaningful label and be associated with a library source or service assignment.
 - Stereo source associations identify left and right sides.
-- Place stageboxes at user-defined positions on the canvas.
+- Place stageboxes at user-defined positions on the canvas. Provide a text filter to find stageboxes by name without changing their stored positions or configuration.
 - Display assigned source/channel names on or beside the relevant stagebox.
 - Allow non-stagebox elements or labels (for example, drum position, keys, vocal positions or FOH) as a later extension; do not conflate these with physical input hardware.
 - Stage layout coordinates and box definitions are saved in the complete configuration package.
 
 ### 4. Direct input mapping
 
-- Provide a mapping view that lists every XLR input socket on every stagebox.
-- Allow each stagebox XLR input to map directly to any available M32 physical input target in Local, AES50-A, AES50-B or Card.
+- Provide a mapping view that lists every XLR input socket on every stagebox, with text search across stagebox names, input labels, associated source names and existing M32 physical input targets.
+- Allow each stagebox XLR input to map directly to any available M32 physical input target in Local, AES50-A, AES50-B, Card or Aux (1–6).
 - Do not model a physical patch panel, intermediate port, normalled connection or thru path.
 - Detect duplicate M32 input destinations and duplicate source socket mappings; clearly identify conflicts rather than silently resolving them.
 - Keep this mapping separate from service lineup assignment to desk channels.
 - Include all stagebox socket labels and direct input mappings in configuration import/export.
 
-### 5. M32 output mapping (later increment)
+### 5. M32 output mapping
 
 - Model M32 physical output sources and destinations separately from stagebox-to-M32 input mapping.
 - Consider Local XLR outputs, AES50 outputs and Card outputs where applicable.
@@ -113,6 +113,8 @@ The app is a static browser application. Configuration data is stored locally in
 4. Build the direct stagebox XLR-to-M32 physical input mapping view and validation.
 5. Implement M32 output mapping as a separate increment.
 6. Implement and test native .scn generation as a separately validated increment.
+
+The initial output-mapping increment is implemented in UAT: destinations can be defined and M32 physical outputs mapped to them. Internal M32 source-to-output routing and native scene generation remain out of scope for that increment.
 
 ## Acceptance principles
 
