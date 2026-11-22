@@ -12,11 +12,13 @@ Publishing is manual through GitHub Actions:
 2. Select **Publish M32 Setup**.
 3. Choose **publish to dev** or **publish to prod**, then run the workflow.
 
-- **publish to dev** publishes the current build under `/dev/` and leaves production untouched.
+- **publish to dev** publishes the current build under `/dev/` and leaves the production site and version history untouched.
 - **publish to prod** publishes the current build at the site root and also creates a retained version under `/versions/`. The version is generated as `vYYYY.MM.DD-RUN` using the UTC date and GitHub Actions run number.
-- Previous version folders are retained. A new production publish updates the root URL but does not delete earlier version folders.
+- Previous version folders are retained across later deployments.
 
-The workflow publishes to the `gh-pages` branch. For the first publication, configure **Settings → Pages → Deploy from a branch → gh-pages → /(root)**. The public site URLs will be:
+The repository's Pages source is **GitHub Actions**. The workflow builds a Pages artifact and deploys it using GitHub's Pages deployment actions. It also maintains the `gh-pages` branch as an archive of the published files so that version folders can be carried forward between deployments; that branch is not the Pages deployment source.
+
+The public site URLs are:
 
 - Production: `https://jaredchurch.github.io/m32-setup/`
 - Development: `https://jaredchurch.github.io/m32-setup/dev/`
