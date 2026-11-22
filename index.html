@@ -1,13 +1,44 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>M32 Service Setup</title><link rel="stylesheet" href="styles.css"></head>
-<body><header><b class="logo">M32</b><div><strong>Service Setup</strong><small>Stage &amp; console preparation</small></div><span id="status">No scene loaded</span></header>
-<main><section class="hero"><div><p class="eyebrow">M32 SCENE WORKSPACE · FIRST CUT</p><h1>Prepare the service.<br><em>Know what goes where.</em></h1><p>Load an M32 scene, review its channels and buses, organise sources on a stage plan, and export a portable service profile.</p></div><aside><label for="scene">Open M32 scene <small>.scn</small></label><input id="scene" type="file" accept=".scn,.txt"><p>Choose an M32 scene file from your computer. It is read locally in your browser and is not uploaded.</p></aside></section>
-<section id="empty" class="empty"><h2>Start with a real scene</h2><p>Select an M32 scene file to populate the workspace. Nothing is sent to the console and the original file is not modified.</p></section>
-<div id="work" hidden><section class="metrics"><article><small>Input channels</small><b id="cc">—</b></article><article><small>Mix buses</small><b id="bc">—</b></article><article><small>DCAs</small><b id="dc">—</b></article><article><small>Output routes</small><b id="oc">—</b></article></section>
-<section class="scene"><div><small>LOADED REFERENCE</small><h2 id="title">—</h2><p id="meta"></p></div><button id="export">Export service profile ↓</button></section>
-<nav><button class="tab active" data-tab="stage">Stage plan</button><button class="tab" data-tab="channels">Channels</button><button class="tab" data-tab="buses">Buses &amp; DCAs</button><button class="tab" data-tab="routing">Output routing</button></nav>
-<section id="stage" class="panel"><h2>Stage plan</h2><p>Assign each console channel to a stage area. Suggested groupings are based on channel names and need checking against the physical stage.</p><div id="stage-grid" class="stage-grid"></div></section>
-<section id="channels" class="panel" hidden><h2>Input channels</h2><div class="scroll"><table><thead><tr><th>Channel</th><th>Name</th><th>Stage area</th><th>Scene attributes</th></tr></thead><tbody id="channel-rows"></tbody></table></div></section>
-<section id="buses" class="panel" hidden><h2>Buses &amp; DCAs</h2><div class="columns"><div><h3>Mix buses</h3><div id="bus-list"></div></div><div><h3>DCAs</h3><div id="dca-list"></div></div></div></section>
-<section id="routing" class="panel" hidden><h2>Output routing</h2><p>Raw assignments from the scene. Confirm destinations against the installed system.</p><div class="scroll"><table><thead><tr><th>Output</th><th>Assignment</th><th>Settings</th></tr></thead><tbody id="routes"></tbody></table></div></section>
-<footer>Planning prototype only. No M32 connection, OSC control, console changes or native scene generation. Verify patching and routing on the console before using a service setup.</footer></div></main><script src="app.js"></script></body></html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>M32 Service Setup</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header><div class="brand">M32</div><div><strong>Service Setup</strong><small>Stage · patching · console</small></div><span id="status" class="status">Local workspace</span></header>
+<main>
+<section class="hero"><div><p class="eyebrow">SERVICE CONFIGURATION WORKSPACE</p><h1>Build the signal path.<br><em>Before the first soundcheck.</em></h1><p>Maintain a reusable source library, lay out stageboxes and patch panels, map physical inputs to desk channels, and keep a portable copy of the complete setup.</p></div><aside><h2>Configuration</h2><p>Saved automatically in this browser. Export a full JSON backup to move it to another device.</p><div class="actions"><button id="export-config" class="primary">Export full configuration ↓</button><label class="file-button">Import configuration ↑<input id="import-config" type="file" accept=".json,application/json"></label></div><small id="save-state">Not saved yet</small></aside></section>
+<section class="toolbar"><div><b>Workspace</b><span> · configuration is independent of the M32 scene file</span></div><button id="reset-config" class="quiet">Reset workspace</button></section>
+<nav class="tabs">
+<button class="tab active" data-tab="service">Service lineup</button><button class="tab" data-tab="library">Source library</button><button class="tab" data-tab="stage">Stage layout</button><button class="tab" data-tab="patching">Patch panel</button><button class="tab" data-tab="console">M32 &amp; scene</button>
+</nav>
+<section id="service" class="panel">
+<div class="section-head"><div><p class="eyebrow">01 / CURRENT SERVICE</p><h2>Service lineup</h2><p>Select the sources needed for this service. Physical input and desk channel are separate assignments.</p></div></div>
+<div class="inline-form"><label>Service name<input id="service-name" placeholder="Sunday service"></label><label>Date<input id="service-date" type="date"></label></div>
+<div class="form-row"><label>Add from source library<select id="add-assignment"></select></label><button id="add-assignment-btn" class="primary">Add to service</button></div>
+<div id="assignment-list" class="cards"></div><div id="validation" class="notice"></div>
+</section>
+<section id="library" class="panel" hidden>
+<div class="section-head"><div><p class="eyebrow">02 / REUSABLE DEFINITIONS</p><h2>Source library</h2><p>Keep more sources here than the 32 desk channels available. Only the current service lineup uses console channels.</p></div></div>
+<div class="editor"><label>Source / performer name<input id="lib-name" placeholder="e.g. Lead Vocal"></label><label>Category<select id="lib-category"><option>Vocal</option><option>Drums</option><option>Guitar</option><option>Bass</option><option>Keys</option><option>Playback</option><option>Other</option></select></label><label>Configuration<select id="lib-mode"><option value="mono">Mono</option><option value="stereo">Stereo pair</option></select></label><label>Vocal role<select id="lib-vocal"><option value="">Not applicable</option><option>Lead Vocal</option><option>Backing Vocal</option></select></label><label>Notes<input id="lib-notes" placeholder="Optional notes"></label><button id="add-library" class="primary">Add source</button></div>
+<div id="library-list" class="cards"></div>
+</section>
+<section id="stage" class="panel" hidden>
+<div class="section-head"><div><p class="eyebrow">03 / PHYSICAL EQUIPMENT</p><h2>Stage layout</h2><p>Arrange physical stageboxes and patch panels. Drag equipment to position it; edit its name, model and sockets below.</p></div></div>
+<div class="form-row"><label>Equipment name<input id="box-name" placeholder="Stagebox A"></label><label>Model / type<input id="box-model" placeholder="DL16 / SD16 / custom"></label><label>Input sockets<input id="box-count" type="number" min="1" max="64" value="16"></label><button id="add-stagebox" class="primary">Add stagebox</button></div>
+<div class="form-row"><label>Patch panel name<input id="stage-panel-name" placeholder="Stage patch panel"></label><label>Panel model<input id="stage-panel-model" placeholder="Optional model"></label><label>Ports<input id="stage-panel-count" type="number" min="1" max="96" value="24"></label><button id="add-stage-panel" class="secondary">Add patch panel</button></div>
+<div id="stage-canvas" class="stage-canvas"><span class="canvas-hint">Your stage equipment will appear here.</span></div>
+<div id="equipment-editors" class="cards"></div>
+</section>
+<section id="patching" class="panel" hidden>
+<div class="section-head"><div><p class="eyebrow">04 / PHYSICAL SIGNAL ROUTING</p><h2>Patch panel &amp; signal path</h2><p>Connect a stagebox output to a patch-panel port, then route that port to an M32 physical input. The desk channel assignment is configured separately in the service lineup.</p></div></div>
+<div class="signal-flow"><span>Source</span><b>Stagebox socket</b><i>→</i><b>Patch-panel port</b><i>→</i><b>M32 physical input</b><i>→</i><b>Desk channel</b></div>
+<div class="editor patch-editor"><label>Stagebox socket<select id="route-socket"></select></label><label>Patch-panel port<select id="route-port"></select></label><label>Connection type<select id="route-type"><option value="direct">Direct</option><option value="normalled">Normalled</option><option value="half-normalled">Half-normalled</option><option value="thru">Thru</option></select></label><button id="connect-stage-panel" class="primary">Connect stagebox → panel</button></div>
+<div class="editor patch-editor"><label>Patch-panel port<select id="out-port"></select></label><label>M32 input source<select id="out-source"><option>Local</option><option>AES50-A</option><option>AES50-B</option><option>Card</option></select></label><label>Input number<input id="out-number" type="number" min="1" max="48" value="1"></label><button id="connect-panel-m32" class="primary">Connect panel → M32</button></div>
+<div id="patch-connections" class="cards"></div>
+<div id="patch-validation" class="notice"></div>
+</section>
+<section id="console" class="panel" hidden>
+<div class="section-head"><div><p class="eyebrow">05 / CONSOLE REFERENCE</p><h2>M32 scene inspector</h2><p>Optionally load a known-good scene for reference. It stays in this browser; this version does not generate or upload native scene files.</p></div></div>
+<div class="scene-upload"><label>Open M32 scene (.scn)<input id="scene-file" type="file" accept=".scn,.txt"></label><div id="scene-summary" class="muted">No scene loaded.</div></div>
+<div id="scene-details"></div>
+</section>
+<footer>Local planning tool. No connection to the console, OSC control or native .scn generation is implemented yet. Confirm every physical connection and test any future generated scene on the actual console before live use.</footer>
+</main><script src="app.js"></script></body></html>
