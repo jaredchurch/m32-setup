@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id), STORE="m32-service-config-v1", FORMAT="m32-service-configuration";
 const uid=()=> "id-"+Math.random().toString(36).slice(2,10);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const fresh=()=>({format:FORMAT,schemaVersion:1,metadata:{updatedAt:new Date().toISOString()},service:{name:"",date:"",assignments:[]},library:[],stage:{width:1000,height:560,stageboxes:[]},connections:{stageToM32:[],m32ToDestinations:[]},outputs:{destinations:[]},sceneReference:null});
+const fresh=()=>({format:FORMAT,schemaVersion:1,metadata:{updatedAt:new Date().toISOString()},service:{name:"",date:"",assignments:[]},library:[],stage:{width:1000,height:560,stageboxes:[]},connections:{stageToM32:[],stageToDesk:[],m32ToDestinations:[]},outputs:{destinations:[]},sceneReference:null});
 let config=fresh(),scene=null,drag=null,libraryEditId=null;
 function persist(){config.metadata.updatedAt=new Date().toISOString();try{localStorage.setItem(STORE,JSON.stringify(config));$("save-state").textContent="Saved in this browser · "+new Date().toLocaleTimeString();$("status").textContent="Saved locally"}catch(e){$("save-state").textContent="Browser storage unavailable; export a backup."}}
 function loadStored(){try{const raw=localStorage.getItem(STORE);if(raw){const parsed=JSON.parse(raw);validate(parsed);config=parsed}}catch(e){console.warn("Stored configuration could not be loaded",e)}}
@@ -20,6 +20,8 @@ const libs=new Set();x.library.forEach(l=>{addId(l);if(typeof l.name!=="string"|
 x.service.assignments.forEach(a=>{addId(a);if(!libs.has(a.libraryId)||!["Local","AES50-A","AES50-B","Card","Aux"].includes(a.source)||!Number.isInteger(+a.input)||+a.input<1||+a.input>inputLimit(a.source)||!Number.isInteger(+a.desk)||+a.desk<1||+a.desk>32)throw Error("A service assignment contains an invalid source or channel allocation.")});
 const sockets=new Set();x.stage.stageboxes.forEach(b=>{addId(b);if(!Array.isArray(b.sockets))throw Error("A stagebox has no valid socket list.");b.sockets.forEach(t=>{addId(t);if((t.type||"XLR")==="XLR")sockets.add(b.id+":"+t.id)})});
 if(!Array.isArray(x.connections.stageToM32))throw Error("Direct input mappings are missing or invalid.");
+if(!Array.isArray(x.connections.stageToDesk))x.connections.stageToDesk=[];
+x.connections.stageToDesk.forEach(t=>{addId(t);if(!sockets.has(t.socketId)||!Number.isInteger(+t.deskChannel)||+t.deskChannel<1||+t.deskChannel>32)throw Error("A stagebox-to-desk-channel mapping contains an invalid socket or desk channel.")});
 x.connections.stageToM32.forEach(t=>{addId(t);if(!sockets.has(t.socketId)||!["Local","AES50-A","AES50-B","Card","Aux"].includes(t.source)||!Number.isInteger(+t.number)||+t.number<1||+t.number>inputLimit(t.source))throw Error("A stagebox-to-M32 mapping contains an invalid endpoint or input.")});
 x.outputs.destinations.forEach(d=>{addId(d);if(typeof d.name!=="string"||!d.name.trim()||!["FOH","Monitor","IEM","Broadcast","Recording","Other"].includes(d.type))throw Error("An output destination has an invalid name or type.");});
 const destinationIds=new Set(x.outputs.destinations.map(d=>d.id)),outputKeys=new Set(),destinationLabels=new Set();
@@ -73,16 +75,18 @@ $("equipment-editors").innerHTML=[...boxes.map(b=>'<article class="card equipmen
 renderRouteSelectors()}
 function renderRouteSelectors(){} // Legacy two-step selectors replaced by the patch matrix.
 function patchMappingFilter(){return ($("patch-mapping-search")?.value||"").trim().toLowerCase()}
+function patchMappingStatus(){return $("patch-mapping-status")?.value||"all"}
 function renderPatching(){
-const sockets=socketList(),routes=config.connections.stageToM32,term=patchMappingFilter();
+const sockets=socketList(),routes=config.connections.stageToM32,deskRoutes=config.connections.stageToDesk,term=patchMappingFilter(),status=patchMappingStatus();
 const targets=["Local","AES50-A","AES50-B","Card","Aux"].flatMap(source=>Array.from({length:inputLimit(source)},(_,i)=>({source,number:i+1,value:source+":"+String(i+1).padStart(2,"0")})));
-const options=route=>'<option value="">Not mapped</option>'+targets.map(t=>'<option value="'+t.value+'" '+(route&&route.source===t.source&&+route.number===t.number?'selected':'')+'>'+t.source+' '+String(t.number).padStart(2,"0")+'</option>').join("");
-const matching=sockets.filter(v=>{const route=routes.find(t=>t.socketId===v.id),target=route?route.source+" "+String(route.number).padStart(2,"0"):"";return !term||(v.label+" "+target).toLowerCase().includes(term)});
-$("patch-connections").innerHTML=!sockets.length?'<p class="muted">Add a stagebox with XLR inputs in Stage layout. Radio microphones can be represented by a stagebox named “Radio Mics”.</p>':matching.length?'<div class="scroll"><table><thead><tr><th>Stagebox input</th><th>M32 physical input target</th></tr></thead><tbody>'+matching.map(v=>{const route=routes.find(t=>t.socketId===v.id);return '<tr><th scope="row">'+esc(v.label)+'</th><td><select aria-label="'+esc(v.label)+' M32 physical input target" data-direct-route="'+esc(v.id)+'">'+options(route)+'</select></td></tr>'}).join("")+'</tbody></table></div>':'<p class="muted">No inputs match your search.</p>';
-const errors=[],seenTargets=new Set(),seenSockets=new Set();routes.forEach(t=>{const k=t.source+"-"+t.number;if(seenTargets.has(k))errors.push("M32 physical input "+k+" is mapped more than once.");seenTargets.add(k);if(seenSockets.has(t.socketId))errors.push("A stagebox input is mapped more than once.");seenSockets.add(t.socketId)});
-$("patch-validation").innerHTML=errors.length?'<b>Routing conflicts</b><ul>'+errors.map(v=>'<li>'+esc(v)+'</li>').join("")+'</ul>':'<b>No duplicate mappings detected.</b>';
+const physicalOptions=route=>'<option value="">Not mapped</option>'+targets.map(t=>'<option value="'+t.value+'" '+(route&&route.source===t.source&&+route.number===t.number?'selected':'')+'>'+t.source+' '+String(t.number).padStart(2,"0")+'</option>').join("");
+const deskOptions=route=>'<option value="">Not assigned</option>'+Array.from({length:32},(_,i)=>i+1).map(n=>'<option value="'+n+'" '+(route&&+route.deskChannel===n?'selected':'')+'>CH '+String(n).padStart(2,"0")+'</option>').join("");
+const matching=sockets.filter(v=>{const route=routes.find(t=>t.socketId===v.id),desk=deskRoutes.find(t=>t.socketId===v.id),target=route?route.source+" "+String(route.number).padStart(2,"0"):"",channel=desk?"CH "+String(desk.deskChannel).padStart(2,"0"):"";const mapped=!!route;return (status==="all"||(status==="mapped"&&mapped)||(status==="unmapped"&&!mapped))&&(!term||(v.label+" "+target+" "+channel).toLowerCase().includes(term))});
+$("patch-connections").innerHTML=!sockets.length?'<p class="muted">Add a stagebox with XLR inputs in Stage layout. Radio microphones can be represented by a stagebox named “Radio Mics”.</p>':matching.length?'<div class="scroll"><table><thead><tr><th>Stagebox input</th><th>M32 physical input</th><th>M32 desk channel / fader</th></tr></thead><tbody>'+matching.map(v=>{const route=routes.find(t=>t.socketId===v.id),desk=deskRoutes.find(t=>t.socketId===v.id);return '<tr><th scope="row">'+esc(v.label)+'</th><td><select aria-label="'+esc(v.label)+' M32 physical input target" data-direct-route="'+esc(v.id)+'">'+physicalOptions(route)+'</select></td><td><select aria-label="'+esc(v.label)+' M32 desk channel" data-desk-route="'+esc(v.id)+'">'+deskOptions(desk)+'</select></td></tr>'}).join("")+'</tbody></table></div>':'<p class="muted">No inputs match the current search and physical-input status filter.</p>';
+const errors=[],seenTargets=new Set(),seenSockets=new Set(),seenDesk=new Set();routes.forEach(t=>{const k=t.source+"-"+t.number;if(seenTargets.has(k))errors.push("M32 physical input "+k+" is mapped more than once.");seenTargets.add(k);if(seenSockets.has(t.socketId))errors.push("A stagebox input is mapped more than once.");seenSockets.add(t.socketId)});
+deskRoutes.forEach(t=>{const channel=+t.deskChannel;if(seenDesk.has(channel))errors.push("M32 desk channel CH "+String(channel).padStart(2,"0")+" is assigned to more than one stagebox input.");seenDesk.add(channel)});
+$("patch-validation").innerHTML=errors.length?'<b>Mapping conflicts</b><ul>'+errors.map(v=>'<li>'+esc(v)+'</li>').join("")+'</ul>':'<b>No duplicate physical inputs or desk channels detected.</b>';
 }
-
 
 function outputBanks(){return [{bank:"Local",count:16},{bank:"AES50-A",count:48},{bank:"AES50-B",count:48},{bank:"Card",count:32}]}
 function renderOutputMapping(){
@@ -104,6 +108,7 @@ $("stagebox-search").addEventListener("input",renderStage);
 $("stagebox-search").addEventListener("search",renderStage);
 $("patch-mapping-search").addEventListener("input",renderPatching);
 $("patch-mapping-search").addEventListener("search",renderPatching);
+$("patch-mapping-status").addEventListener("change",renderPatching);
 $("library-category-filter").addEventListener("change",refreshLibraryFilters);
 let libraryDragId=null;
 $("library-list").addEventListener("dragstart",e=>{const card=e.target.closest("[data-library-drag]");if(!card)return;libraryDragId=card.dataset.libraryDrag;card.classList.add("dragging");e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",libraryDragId)});
@@ -129,7 +134,7 @@ $("equipment-editors").addEventListener("click",e=>{const updatePortsId=e.target
 $("stage-canvas").addEventListener("pointerdown",e=>{const el=e.target.closest("[data-dragid]");if(!el)return;drag={el,startX:e.clientX,startY:e.clientY,left:parseFloat(el.style.left)||0,top:parseFloat(el.style.top)||0};el.setPointerCapture?.(e.pointerId)});
 $("stage-canvas").addEventListener("pointermove",e=>{if(!drag)return;const r=$("stage-canvas").getBoundingClientRect();drag.el.style.left=Math.max(0,Math.min(85,drag.left+(e.clientX-drag.startX)/r.width*100))+"%";drag.el.style.top=Math.max(0,Math.min(82,drag.top+(e.clientY-drag.startY)/r.height*100))+"%"});
 $("stage-canvas").addEventListener("pointerup",()=>{if(!drag)return;const id=drag.el.dataset.dragid,item=config.stage.stageboxes.find(x=>x.id===id);if(item){item.x=parseFloat(drag.el.style.left);item.y=parseFloat(drag.el.style.top)}drag=null;persist()});
-$("patch-connections").addEventListener("change",e=>{const socketId=e.target.dataset.directRoute;if(socketId===undefined)return;config.connections.stageToM32=config.connections.stageToM32.filter(t=>t.socketId!==socketId);if(e.target.value){const [source,number]=e.target.value.split(":");config.connections.stageToM32.push({id:uid(),socketId,source,number:+number})}renderPatching();renderAssignments();persist()});
+$("patch-connections").addEventListener("change",e=>{const socketId=e.target.dataset.directRoute,deskSocketId=e.target.dataset.deskRoute;if(socketId!==undefined){config.connections.stageToM32=config.connections.stageToM32.filter(t=>t.socketId!==socketId);if(e.target.value){const [source,number]=e.target.value.split(":");config.connections.stageToM32.push({id:uid(),socketId,source,number:+number})}renderPatching();renderAssignments();persist();return}if(deskSocketId!==undefined){config.connections.stageToDesk=config.connections.stageToDesk.filter(t=>t.socketId!==deskSocketId);if(e.target.value)config.connections.stageToDesk.push({id:uid(),socketId:deskSocketId,deskChannel:+e.target.value});renderPatching();persist()}});
 
 
 $("add-output-destination").onclick=()=>{const name=$("output-destination-name").value.trim();if(!name)return alert("Enter a destination name.");if(config.outputs.destinations.some(d=>d.name.toLowerCase()===name.toLowerCase()))return alert("A destination with that name already exists.");config.outputs.destinations.push({id:uid(),name,type:$("output-destination-type").value,notes:$("output-destination-notes").value.trim()});$("output-destination-name").value="";$("output-destination-notes").value="";renderOutputMapping();persist()};
