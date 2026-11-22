@@ -1,39 +1,42 @@
-# M32 Service Setup — first cut
+# M32 Service Setup
 
-A dependency-free static web app intended for GitHub Pages.
+A dependency-free static web app for planning an M32 service setup. It can be hosted on GitHub Pages or opened locally in a modern browser.
 
 ## Run locally
-Open `index.html` in a modern browser, then select an M32 text scene file (`.scn`) from your computer.
+
+Open `index.html` in a modern browser. No build step, package installation or server is required.
+
+## Current workspace capabilities
+
+- **Reusable source library:** define performers and instruments independently of a particular service; choose mono or stereo pair and identify Lead Vocal / Backing Vocal roles.
+- **Service lineup:** select library items for the current service and assign their physical M32 input independently from their desk channel/fader. Stereo assignments reserve adjacent input numbers and desk channels.
+- **Stage layout:** add stageboxes with configurable XLR and RJ45 socket counts, edit socket labels, associate sockets with library sources and drag equipment around a top-down canvas.
+- **Input mapping:** map each stagebox XLR input directly to an M32 physical input in the Local, AES50-A, AES50-B or Card bank. Radio microphones can be represented by a stagebox named "Radio Mics". Desk channel/fader assignment remains separate.
+- **Full configuration backup:** export/import one versioned JSON configuration containing the library, service lineup, stage layout, stageboxes, socket labels, physical input mappings and metadata. Import is validated and requires confirmation before replacing the current workspace.
+- **Browser persistence:** changes are saved in local browser storage. Export a backup to transfer the setup to another browser or device.
+- **M32 scene reference:** optionally load a scene file locally to inspect channel, bus, DCA and output-route names. The scene is not uploaded.
+
+## Configuration and privacy
+
+The complete configuration format is `m32-service-configuration`, schema version 1. The app stores it locally in the browser and exports it as JSON. Importing a file replaces the current workspace only after basic format/structure validation and user confirmation.
+
+Scene files and configuration data are not sent to a server. Do not commit real scene files, venue-specific labels, performer details, credentials or other private material to this public repository.
+
+## Known limitations / next increments
+
+- This is a planning workspace, not an M32 remote-control application. It does not connect to the console or send OSC.
+- Input mappings are explicit planning records. The operator must confirm real-world wiring and console configuration.
+- The stage canvas positions equipment visually; it is not a scale drawing or cable-length planner.
+- Native M32 `.scn` generation is **not implemented**. A known-good base scene and verified M32 syntax will be required before that is attempted. Preserve the original scene and test any future generated file on the actual console before live use.
+- M32 output routing and output mapping are recorded for a later increment in [issue #1](https://github.com/jaredchurch/m32-setup/issues/1).
 
 ## Publish
 
-Publishing is automated by GitHub Actions:
+Publishing is automated through GitHub Actions:
 
-- A commit pushed to `UAT` publishes the build to the UAT site: https://jaredchurch.github.io/m32-setup/uat/
-- A commit pushed to `main` publishes Production at the site root, creates a retained version under `/versions/`, and then merges `main` back into `UAT` before triggering a fresh UAT publication.
-- Manual workflow dispatch remains available for UAT (from `UAT`) and Production (from `main`).
+- Commits to `UAT` publish to https://jaredchurch.github.io/m32-setup/uat/
+- Commits to `main` publish Production at https://jaredchurch.github.io/m32-setup/, retain a version under `/versions/`, then merge `main` back into `UAT` and trigger a UAT publication.
+- Manual workflow dispatch is also available from the matching branch.
+- The previous `/dev/` address is retired.
 
-Production versions are generated as `vYYYY.MM.DD-RUN` using the UTC date and GitHub Actions run number. Previous version folders are retained across later deployments. The old `/dev/` address is retired.
-
-The repository's Pages source is **GitHub Actions**. The workflow builds a Pages artifact and deploys it using GitHub's Pages deployment actions. It also maintains the `gh-pages` branch as an archive of the published files so that version folders can be carried forward between deployments; that branch is not the Pages deployment source.
-
-The public site URLs are:
-
-- Production: https://jaredchurch.github.io/m32-setup/
-- UAT: https://jaredchurch.github.io/m32-setup/uat/
-- Versioned production: https://jaredchurch.github.io/m32-setup/versions/<version>/
-
-## Current capabilities
-- Reads an M32 text scene locally in the browser; it does not upload the file.
-- Parses input channel names, bus names, DCA names and output assignment lines.
-- Provides an editable first-pass grouping of channels into stage areas. Initial groupings are name-based suggestions and must be checked against the actual stage.
-- Exports a portable JSON service-planning profile.
-
-## Deliberate limitations
-- Planning prototype only: it does not connect to the M32, send OSC, change console state or generate a native `.scn` file.
-- Stage assignments are provisional; the scene does not establish the physical position of every source.
-- Output assignment tokens are shown as recorded and are not translated into physical destination labels.
-- Do not load the exported JSON onto an M32. It is an application interchange format only.
-
-## Privacy
-Scene files are selected locally by the operator and are not uploaded by this application. Do not commit real scene files, venue-specific labels, credentials or other private material to this public repository. Use sanitised example files only, with explicit approval.
+All GitHub Actions must use supported Node.js 24-compatible action runtimes; do not introduce actions that depend on deprecated Node.js 20.
