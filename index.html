@@ -7,7 +7,7 @@
 <section class="hero"><div><p class="eyebrow">SERVICE CONFIGURATION WORKSPACE</p><h1>Build the signal path.<br><em>Before the first soundcheck.</em></h1><p>Maintain a reusable source library, lay out stageboxes and patch panels, map physical inputs to desk channels, and keep a portable copy of the complete setup.</p></div><aside><h2>Configuration</h2><p>Saved automatically in this browser. Export a full JSON backup to move it to another device.</p><div class="actions"><button id="export-config" class="primary">Export full configuration ↓</button><label class="file-button">Import configuration ↑<input id="import-config" type="file" accept=".json,application/json"></label></div><small id="save-state">Not saved yet</small></aside></section>
 <section class="toolbar"><div><b>Workspace</b><span> · configuration is independent of the M32 scene file</span></div><button id="reset-config" class="quiet">Reset workspace</button></section>
 <nav class="tabs">
-<button class="tab active" data-tab="service">Service lineup</button><button class="tab" data-tab="library">Source library</button><button class="tab" data-tab="stage">Stage layout</button><button class="tab" data-tab="patching">Patch panel</button><button class="tab" data-tab="console">M32 &amp; scene</button>
+<button class="tab active" data-tab="service">Service lineup</button><button class="tab" data-tab="library">Source library</button><button class="tab" data-tab="stage">Stage layout</button><button class="tab" data-tab="patching">Input mapping</button><button class="tab" data-tab="console">M32 &amp; scene</button>
 </nav>
 <section id="service" class="panel">
 <div class="section-head"><div><p class="eyebrow">01 / CURRENT SERVICE</p><h2>Service lineup</h2><p>Select the sources needed for this service. Physical input and desk channel are separate assignments.</p></div></div>
@@ -29,16 +29,16 @@
 <div id="library-list" class="cards"></div>
 </section>
 <section id="stage" class="panel" hidden>
-<div class="section-head"><div><p class="eyebrow">03 / PHYSICAL EQUIPMENT</p><h2>Stage layout</h2><p>Arrange physical stageboxes and patch panels. Drag equipment to position it; edit its name, model and sockets below.</p></div></div>
+<div class="section-head"><div><p class="eyebrow">03 / PHYSICAL EQUIPMENT</p><h2>Stage layout</h2><p>Arrange stageboxes and radio-mic receivers. Drag equipment to position it; edit its name, model and sockets below.</p></div></div>
 <div class="form-row"><label>Equipment name<input id="box-name" placeholder="Stagebox A"></label><label>Model / type<input id="box-model" placeholder="DL16 / SD16 / custom"></label><label>XLR input ports<input id="box-xlr-count" type="number" min="0" max="64" value="3"></label><label>RJ45 ports<input id="box-rj45-count" type="number" min="0" max="16" value="3"></label><button id="add-stagebox" class="primary">Add stagebox</button></div>
-<div class="form-row"><label>Patch panel name<input id="stage-panel-name" placeholder="Stage patch panel"></label><label>Panel model<input id="stage-panel-model" placeholder="Optional model"></label><label>Ports<input id="stage-panel-count" type="number" min="1" max="96" value="32"></label><button id="add-stage-panel" class="secondary">Add patch panel</button></div>
+
 <div id="stage-canvas" class="stage-canvas"><span class="canvas-hint">Your stage equipment will appear here.</span></div>
 <div id="equipment-editors" class="cards"></div>
 </section>
 <section id="patching" class="panel" hidden>
-<div class="section-head"><div><p class="eyebrow">04 / PHYSICAL SIGNAL ROUTING</p><h2>Patch panel &amp; signal path</h2><p>Connect a stagebox output to a patch-panel port, then route that port to an M32 physical input. The desk channel assignment is configured separately in the service lineup.</p></div></div>
-<div class="signal-flow"><span>Source</span><b>Stagebox socket</b><i>→</i><b>Patch-panel port</b><i>→</i><b>M32 physical input</b><i>→</i><b>Desk channel</b></div>
-<p class="patching-help">Each row represents one physical patch-panel input. Choose the stagebox XLR socket feeding that port, then choose the M32 input bank and input number it is wired to. Leave either side as “Not connected” when unused.</p>
+<div class="section-head"><div><p class="eyebrow">04 / PHYSICAL SIGNAL ROUTING</p><h2>Stagebox input mapping</h2><p>Map each stagebox XLR input directly to any available M32 physical input. The desk channel/fader assignment is configured separately in the service lineup.</p></div></div>
+<div class="signal-flow"><b>Stagebox XLR input</b><i>→</i><b>M32 physical input</b><i>→</i><b>Desk channel</b></div>
+<p class="patching-help">Choose an M32 physical input target for each stagebox input. Local and Card inputs 1–32 and AES50-A/B inputs 1–48 are available. Leave unused inputs unmapped.</p>
 <div id="patch-connections" class="patch-matrix"></div>
 <div id="patch-validation" class="notice"></div>
 </section>
