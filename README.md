@@ -10,8 +10,8 @@ Open `index.html` in a modern browser. No build step, package installation or se
 
 - **Reusable source library:** define performers and instruments independently of a particular service; choose mono or stereo pair and identify Lead Vocal / Backing Vocal roles.
 - **Service lineup:** select library items for the current service and assign their physical M32 input independently from their desk channel/fader. Stereo assignments reserve adjacent input numbers and desk channels.
-- **Stage layout:** add stageboxes with configurable XLR and RJ45 socket counts (editable after creation), edit socket labels, associate sockets with library sources and drag equipment around a top-down canvas.
-- **Input mapping:** map each stagebox XLR input directly to an M32 physical input in the Local, AES50-A, AES50-B or Card bank. Radio microphones can be represented by a stagebox named "Radio Mics". Desk channel/fader assignment remains separate.
+- **Stage layout:** add stageboxes with configurable XLR and RJ45 socket counts (editable after creation), edit socket labels, associate sockets with library sources, drag equipment around a top-down canvas and filter stageboxes by name.
+- **Input mapping:** map each stagebox XLR input directly to an M32 physical input in the Local, AES50-A, AES50-B, Card or Aux 1–6 bank. Search/filter the mapping list by stagebox name, input label, associated source name or existing M32 target. Radio microphones can be represented by a stagebox named "Radio Mics". Desk channel/fader assignment remains separate.
 - **Output mapping:** define destination equipment and systems (FOH, monitors, IEM, broadcast, recording or other) and map M32 Local XLR (1–16), AES50-A/B (1–48) and Card (1–32) physical outputs to them. Optional destination channel labels support Left/Right and named feeds. Duplicate physical outputs and repeated labels within a destination are validated.
 - **Full configuration backup:** export/import one versioned JSON configuration containing the library, service lineup, stage layout, stageboxes, socket labels, physical input mappings and metadata. Import is validated and requires confirmation before replacing the current workspace.
 - **Browser persistence:** changes are saved in local browser storage. Export a backup to transfer the setup to another browser or device.
@@ -22,6 +22,13 @@ Open `index.html` in a modern browser. No build step, package installation or se
 The complete configuration format is `m32-service-configuration`, schema version 1. The app stores it locally in the browser and exports it as JSON. Importing a file replaces the current workspace only after basic format/structure validation and user confirmation.
 
 Scene files and configuration data are not sent to a server. Do not commit real scene files, venue-specific labels, performer details, credentials or other private material to this public repository.
+
+## Recent implementation notes
+
+- Stagebox name search and input-mapping text search are available in the UAT application. Both are display filters; they do not alter configuration or routing records.
+- Input mapping includes the M32 Aux 1–6 input bank in addition to Local, AES50-A, AES50-B and Card.
+- Stagebox XLR and RJ45 port counts can be edited after creation. The default is three of each.
+- The Pages publishing workflow gives each run attempt a unique artifact name, avoiding duplicate-artifact failures when a failed deployment is retried.
 
 ## Known limitations / next increments
 
