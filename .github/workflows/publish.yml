@@ -96,13 +96,22 @@ jobs:
 
           touch site/.nojekyll
 
+      # Use git directly rather than a Node-based publishing action. This
+      # keeps the workflow on supported action runtimes and retains history.
       - name: Save published-site archive
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./site
-          keep_files: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          rsync -a --delete --exclude='.git/' site/ previous-site/
+          git -C previous-site config user.name "github-actions[bot]"
+          git -C previous-site config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C previous-site add -A
+          if git -C previous-site diff --cached --quiet; then
+            echo "Published-site archive is already up to date."
+          else
+            git -C previous-site commit -m "Publish site archive"
+            git -C previous-site push origin HEAD:gh-pages
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
