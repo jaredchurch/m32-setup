@@ -141,3 +141,5 @@ The initial output-mapping increment is implemented in UAT: destinations can be 
 - Export then import round-trips the entire configuration without losing library entries, stageboxes, positions, names or assignments.
 - Import errors leave the current workspace unchanged.
 - No private scene or performer data is transmitted to a server.
+
+- Scene export must offer Windows (CRLF) and Unix (LF) line-ending options.
