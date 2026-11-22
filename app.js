@@ -7,7 +7,18 @@ const fresh=()=>({format:FORMAT,schemaVersion:1,metadata:{updatedAt:new Date().t
 let config=fresh(),scene=null,drag=null;
 function persist(){config.metadata.updatedAt=new Date().toISOString();try{localStorage.setItem(STORE,JSON.stringify(config));$("save-state").textContent="Saved in this browser · "+new Date().toLocaleTimeString();$("status").textContent="Saved locally"}catch(e){$("save-state").textContent="Browser storage unavailable; export a backup."}}
 function loadStored(){try{const raw=localStorage.getItem(STORE);if(raw){const parsed=JSON.parse(raw);validate(parsed);config=parsed}}catch(e){console.warn("Stored configuration could not be loaded",e)}}
-function validate(x){if(!x||x.format!==FORMAT||x.schemaVersion!==1)throw Error("Unsupported configuration format or schema version.");for(const k of ["service","library","stage","connections"])if(!x[k])throw Error("Configuration is missing "+k+".");if(!Array.isArray(x.library)||!Array.isArray(x.service.assignments)||!Array.isArray(x.stage.stageboxes)||!Array.isArray(x.stage.patchPanels)||!Array.isArray(x.connections.stageToPanel)||!Array.isArray(x.connections.panelToM32))throw Error("Configuration contains invalid collections.");return true}
+function validate(x){
+if(!x||x.format!==FORMAT||x.schemaVersion!==1)throw Error("Unsupported configuration format or schema version.");
+if(!x.service||!x.stage||!x.connections||!Array.isArray(x.library)||!Array.isArray(x.service.assignments)||!Array.isArray(x.stage.stageboxes)||!Array.isArray(x.stage.patchPanels)||!Array.isArray(x.connections.stageToPanel)||!Array.isArray(x.connections.panelToM32))throw Error("Configuration contains missing or invalid sections.");
+const ids=new Set(),addId=o=>{if(!o||typeof o.id!=="string"||!o.id||ids.has(o.id))throw Error("Configuration contains a missing or duplicate item ID.");ids.add(o.id)};
+const libIds=new Set();x.library.forEach(l=>{addId(l);if(typeof l.name!=="string"||!["mono","stereo"].includes(l.mode))throw Error("A library item has an invalid name or channel mode.");libIds.add(l.id)});
+x.service.assignments.forEach(a=>{addId(a);if(!libIds.has(a.libraryId)||!["Local","AES50-A","AES50-B","Card"].includes(a.source)||!Number.isInteger(+a.input)||+a.input<1||+a.input>48||!Number.isInteger(+a.desk)||+a.desk<1||+a.desk>32)throw Error("A service assignment contains an invalid source or channel allocation.")});
+const socketIds=new Set(),portIds=new Set();
+x.stage.stageboxes.forEach(b=>{addId(b);if(!Array.isArray(b.sockets))throw Error("A stagebox has no valid socket list.");b.sockets.forEach(s=>{addId(s);socketIds.add(b.id+":"+s.id)})});
+x.stage.patchPanels.forEach(p=>{addId(p);if(!Array.isArray(p.ports))throw Error("A patch panel has no valid port list.");p.ports.forEach(t=>{addId(t);portIds.add(p.id+":"+t.id)})});
+x.connections.stageToPanel.forEach(c=>{addId(c);if(!socketIds.has(c.socketId)||!portIds.has(c.portId)||!["direct","normalled","half-normalled","thru"].includes(c.type))throw Error("A stagebox-to-panel connection references an invalid endpoint or type.")});
+x.connections.panelToM32.forEach(c=>{addId(c);if(!portIds.has(c.portId)||!["Local","AES50-A","AES50-B","Card"].includes(c.source)||!Number.isInteger(+c.number)||+c.number<1||+c.number>48)throw Error("A panel-to-M32 connection contains an invalid endpoint or input.")});
+return true}
 function download(name,obj){const u=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:"application/json"})),a=document.createElement("a");a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function tab(name){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!==name)}
 function physicalOptions(value){return ["Local","AES50-A","AES50-B","Card"].map(s=>'<option '+(s===value?'selected':'')+'>'+s+'</option>').join("")}
