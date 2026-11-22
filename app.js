@@ -64,7 +64,7 @@ function addLib(){const name=$("lib-name").value.trim();if(!name)return alert("E
 $("add-library").onclick=addLib;
 $("add-assignment-btn").onclick=()=>{const id=$("add-assignment").value,l=config.library.find(x=>x.id===id);if(!l)return;const used=config.service.assignments.reduce((n,a)=>n+(config.library.find(x=>x.id===a.libraryId)?.mode==="stereo"?2:1),0);config.service.assignments.push({id:uid(),libraryId:id,vocalRole:"",source:"AES50-A",input:Math.min(48,used+1),desk:Math.min(32,used+1)});render()};
 $("service-name").onchange=e=>{config.service.name=e.target.value;persist()};$("service-date").onchange=e=>{config.service.date=e.target.value;persist()};
-$("assignment-list").addEventListener("change",e=>{const a=config.service.assignments.find(x=>x.id===e.target.dataset.a);if(!a)return;const f=e.target.dataset.field;if(f==="source")a.source=e.target.value;else if(f==="input")a.input=+e.target.value;else if(f==="desk")a.desk=+e.target.value;render()});
+$("assignment-list").addEventListener("change",e=>{const a=config.service.assignments.find(x=>x.id===e.target.dataset.a);if(!a)return;const f=e.target.dataset.field;if(f==="source")a.source=e.target.value;else if(f==="input")a.input=+e.target.value;else if(f==="desk")a.desk=+e.target.value;else if(f==="vocalRole")a.vocalRole=e.target.value;render()});
 $("library").addEventListener("click",e=>{
 const editId=e.target.dataset.editLib;if(editId){libraryEditId=editId;renderLibrary();return}
 const cancelId=e.target.dataset.cancelLib;if(cancelId){libraryEditId=null;renderLibrary();return}
