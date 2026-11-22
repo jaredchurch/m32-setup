@@ -4,7 +4,7 @@ Status: current application design; implementation is in progress. The stagebox 
 
 ## Purpose
 
-Provide a reusable planning workspace for an M32 service. The application models the source library, service lineup, physical stage layout, direct stagebox-to-M32 input mapping and the separate assignment of physical inputs to desk channels. The complete configuration is portable independently of an exported M32 scene.
+Provide a reusable planning workspace for an M32 service. The application models the source library, service lineup, physical stage layout, direct stagebox-to-M32 input mapping and separate M32 channel-strip-to-physical-input mapping. The complete configuration is portable independently of an exported M32 scene.
 
 ## Core terminology
 
@@ -12,9 +12,9 @@ Provide a reusable planning workspace for an M32 service. The application models
 - **Stagebox:** a named physical input device represented on the stage layout. It has a display name, configurable XLR input sockets, optional RJ45 network sockets, a stage position and notes.
 - **Stagebox input:** an individual XLR socket on a stagebox. Each socket can be labelled and associated with a source.
 - **Input mapping:** the direct assignment from a stagebox XLR socket to an M32 physical input. There is no intermediate patch-panel equipment in the application model.
-- **Desk channel:** an M32 channel strip/fader (CH 01–32) receiving a physical input. The input-mapping view can record the intended desk-channel/fader assignment for each stagebox input separately from its physical input target; the service lineup also retains its own source-based channel allocation.
+- **M32 channel strip:** a console fader/input channel that can be assigned to an M32 physical input. Supported assignable strips are CH 01–32 and Aux 1–6. FX Returns 1–4 Left/Right are internal effects-engine returns and are displayed but are not assignable to physical inputs in this mapping.
 - **Library item:** a reusable performer/instrument/source definition that exists independently of whether it is selected for a particular service.
-- **Service assignment:** the use of a library item in one service, with its physical input and desk-channel allocation.
+- **Service assignment:** the use of a library item in one service, with its physical input allocation.
 
 Radio microphones are modelled as an ordinary stagebox named **Radio Mics**, with each receiver output represented by an XLR input socket. No separate radio-mic hardware type is required for the current design.
 
@@ -38,10 +38,10 @@ The library may contain more items than the 32 desk channels. Only items assigne
 ### 2. Service lineup and channel allocation
 
 - Select any subset of library items for a service.
-- Assign physical inputs independently from desk channels.
+- Assign physical inputs to source items independently from the M32 channel-strip mapping.
 - Support mono and stereo sources.
-- A stereo source occupies two adjacent physical input sockets and two adjacent desk channels unless a verified M32 capability allows a different arrangement.
-- Detect and clearly report duplicate physical input use, duplicate desk-channel use, out-of-range values and invalid stereo allocations.
+- A stereo source occupies two adjacent physical input sockets; its left/right physical inputs can be assigned to suitable channel strips.
+- Detect and clearly report duplicate physical input use, out-of-range values and invalid stereo allocations.
 - Preserve unused library items and their settings when the service lineup changes.
 - Make it clear which inputs and desk channels are unused.
 
@@ -66,7 +66,7 @@ The library may contain more items than the 32 desk channels. Only items assigne
 - Provide a status filter for all inputs, inputs mapped to a physical M32 input, and inputs not mapped to a physical M32 input. This filter must not change stored mappings.
 - Do not model a physical patch panel, intermediate port, normalled connection or thru path.
 - Detect duplicate M32 input destinations and duplicate source socket mappings; clearly identify conflicts rather than silently resolving them.
-- Keep the physical input target and desk-channel/fader assignment as separate fields and mappings. The mapping view is a convenient per-stagebox-input planning surface; it does not silently rewrite service lineup allocations.
+- Keep stagebox-to-physical-input mapping separate from channel-strip-to-physical-input mapping. A single physical input may be assigned to multiple channel strips.
 - Include all stagebox socket labels and direct input mappings in configuration import/export.
 
 ### 5. M32 output mapping
@@ -85,7 +85,7 @@ Provide a versioned JSON package that includes:
 - Stage layout dimensions and all stagebox definitions, socket names and positions.
 - Service lineup and assignments.
 - Direct stagebox-to-M32 physical input mappings.
-- Desk-channel mappings.
+- M32 channel-strip-to-physical-input mappings, including CH 01–32 and Aux 1–6.
 - Mono/stereo and vocal classifications.
 - Relevant application preferences and metadata.
 
@@ -122,7 +122,9 @@ The initial output-mapping increment is implemented in UAT: destinations can be 
 
 - A library with more than 32 entries can be stored and exported even though no service can allocate more than the available desk channels.
 - Changing a service lineup does not delete or overwrite unused library entries.
-- Physical input mapping and desk-channel assignment are visibly separate fields and can differ.
+- Stagebox-to-physical-input mapping and M32 channel-strip-to-physical-input mapping are separate and can be configured independently.
+- One physical input can feed multiple M32 channel strips.
+- FX Returns 1–4 Left/Right are visible in channel mapping but cannot be assigned a physical input.
 - Stereo allocations are validated for both physical inputs and desk channels.
 - Stagebox socket labels are editable and remain associated with their stagebox identity.
 - Every stagebox XLR socket can be mapped directly to an M32 physical input in the supported input banks.
