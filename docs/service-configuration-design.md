@@ -33,9 +33,9 @@ Each library item supports:
 - Optional full M32 scene-channel configuration retained as a reference.
 - Stereo pairs formed from two mono sources retain the left/right source configuration.
 
-The library may contain more items than the 32 desk channels. Only items assigned to the current service consume desk channels.
+The library may contain more items than the console channel strips. Only items assigned to the current service consume physical inputs; channel-strip patching is configured separately.
 
-### 2. Service lineup and channel allocation
+### 2. Service lineup and physical input allocation
 
 - Select any subset of library items for a service.
 - Assign physical inputs to source items independently from the M32 channel-strip mapping.
@@ -43,7 +43,7 @@ The library may contain more items than the 32 desk channels. Only items assigne
 - A stereo source occupies two adjacent physical input sockets; its left/right physical inputs can be assigned to suitable channel strips.
 - Detect and clearly report duplicate physical input use, out-of-range values and invalid stereo allocations.
 - Preserve unused library items and their settings when the service lineup changes.
-- Make it clear which inputs and desk channels are unused.
+- Make it clear which physical inputs are unused.
 
 ### 3. Visual stage layout
 
@@ -54,7 +54,7 @@ The library may contain more items than the 32 desk channels. Only items assigne
 - Each XLR socket can have a meaningful label and be associated with a library source or service assignment.
 - Stereo source associations identify left and right sides.
 - Place stageboxes at user-defined positions on the canvas. Provide a text filter to find stageboxes by name without changing their stored positions or configuration.
-- Display assigned source/channel names on or beside the relevant stagebox.
+- Display assigned source names on or beside the relevant stagebox.
 - Allow non-stagebox elements or labels (for example, drum position, keys, vocal positions or FOH) as a later extension; do not conflate these with physical input hardware.
 - Stage layout coordinates and box definitions are saved in the complete configuration package.
 
@@ -69,7 +69,16 @@ The library may contain more items than the 32 desk channels. Only items assigne
 - Keep stagebox-to-physical-input mapping separate from channel-strip-to-physical-input mapping. A single physical input may be assigned to multiple channel strips.
 - Include all stagebox socket labels and direct input mappings in configuration import/export.
 
-### 5. M32 output mapping
+### 5. M32 channel mapping
+
+- Provide a dedicated mapping view for all 32 mono channel strips (CH 01–32), six Aux channel strips (Aux 1–6), and eight FX Return strips (FX Returns 1–4 Left/Right).
+- Allow each CH and Aux strip to be assigned to any supported M32 physical input: Local, AES50-A, AES50-B, Card or Aux 1–6.
+- Allow one physical input to feed multiple channel strips; each channel strip can have at most one physical input assignment.
+- Display FX Returns as internal effects-engine returns. Do not offer physical-input assignments for FX Returns.
+- Provide text search across channel names and mapped physical inputs.
+- Preserve channel mappings in full configuration import/export and browser-local persistence.
+
+### 6. M32 output mapping
 
 - Model M32 physical output sources and destinations separately from stagebox-to-M32 input mapping.
 - Consider Local XLR outputs, AES50 outputs and Card outputs where applicable.
@@ -77,7 +86,7 @@ The library may contain more items than the 32 desk channels. Only items assigne
 - Keep output routing distinct from input mapping and desk-channel assignments.
 - Validate duplicate/conflicting assignments and output ranges.
 
-### 6. Complete configuration import/export
+### 7. Complete configuration import/export
 
 Provide a versioned JSON package that includes:
 - Configuration format identifier and schema version.
@@ -93,7 +102,7 @@ Import must validate the format and version before replacing current data. Inval
 
 Export must download the complete package as one file. The existing service-profile JSON export may remain as a separate diagnostic/interchange export, but must not be presented as a full backup.
 
-### 7. Native M32 scene generation (separate increment)
+### 8. Native M32 scene generation (separate increment)
 
 - Generate a genuine M32 text .scn file from a known-good user-supplied base scene.
 - Preserve unrelated scene settings, including buses, DCAs, effects and output routing unless explicitly changed by the user.
@@ -110,7 +119,7 @@ The app is a static browser application. Configuration data is stored locally in
 ## Delivery increments
 
 1. Establish the versioned configuration data model, full import/export and browser-local persistence.
-2. Build the reusable source library and service lineup with independent physical-input and desk-channel assignment, mono/stereo support and validation.
+2. Build the reusable source library and service lineup with independent physical-input and M32 channel-strip mapping, mono/stereo support and validation.
 3. Build the visual stage canvas with configurable stageboxes and sockets.
 4. Build the direct stagebox XLR-to-M32 physical input mapping view and validation.
 5. Implement M32 output mapping as a separate increment.
@@ -125,7 +134,7 @@ The initial output-mapping increment is implemented in UAT: destinations can be 
 - Stagebox-to-physical-input mapping and M32 channel-strip-to-physical-input mapping are separate and can be configured independently.
 - One physical input can feed multiple M32 channel strips.
 - FX Returns 1–4 Left/Right are visible in channel mapping but cannot be assigned a physical input.
-- Stereo allocations are validated for both physical inputs and desk channels.
+- Stereo physical-input allocations are validated; M32 channel mappings independently support channel strips CH 01–32 and Aux 1–6.
 - Stagebox socket labels are editable and remain associated with their stagebox identity.
 - Every stagebox XLR socket can be mapped directly to an M32 physical input in the supported input banks.
 - Duplicate or conflicting physical-input assignments are clearly reported.
