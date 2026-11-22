@@ -74,7 +74,8 @@ The library may contain more items than the console channel strips. Only items a
 - Allow each CH and Aux strip to be assigned to any supported M32 physical input: Local, AES50-A, AES50-B, Card or Aux 1–6.
 - Allow one physical input to feed multiple channel strips; each channel strip can have at most one physical input assignment.
 - Display FX Returns as internal effects-engine returns. Do not offer physical-input assignments for FX Returns.
-- Provide text search across channel names and mapped physical inputs.
+- Display the associated Source Library element name for each mapped physical input by following the M32 channel assignment through the stagebox-to-physical-input mapping to the stagebox socket's library association. Include stereo Left/Right identity and stagebox/socket context where available.
+- Provide text search across channel names, mapped physical inputs, Source Library element names/categories, and associated stagebox/socket labels.
 - Preserve channel mappings in full configuration import/export and browser-local persistence.
 
 ### 6. M32 output mapping
