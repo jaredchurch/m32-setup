@@ -62,11 +62,10 @@ The library may contain more items than the console channel strips. Only items a
 
 - Provide a mapping view that lists every XLR input socket on every stagebox, with text search across stagebox names, input labels, associated source names and existing M32 physical input targets.
 - Allow each stagebox XLR input to map directly to any available M32 physical input target in Local, AES50-A, AES50-B, Card or Aux (1–6).
-- Allow each stagebox XLR input to be assigned independently to an M32 desk channel/fader (CH 01–32), with duplicate desk-channel assignments clearly identified.
 - Provide a status filter for all inputs, inputs mapped to a physical M32 input, and inputs not mapped to a physical M32 input. This filter must not change stored mappings.
 - Do not model a physical patch panel, intermediate port, normalled connection or thru path.
-- Detect duplicate M32 input destinations and duplicate source socket mappings; clearly identify conflicts rather than silently resolving them.
-- Keep stagebox-to-physical-input mapping separate from channel-strip-to-physical-input mapping. A single physical input may be assigned to multiple channel strips.
+- Detect duplicate M32 physical input destinations and duplicate source socket mappings; clearly identify conflicts rather than silently resolving them.
+- Keep stagebox-to-physical-input mapping separate from M32 channel-strip-to-physical-input mapping. The channel mapping is the authoritative fader assignment and allows one physical input to feed multiple channel strips.
 - Include all stagebox socket labels and direct input mappings in configuration import/export.
 
 ### 5. M32 channel mapping
