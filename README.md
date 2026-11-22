@@ -10,7 +10,7 @@ Open `index.html` in a modern browser. No build step, package installation or se
 
 - **Reusable source library:** define performers and instruments independently of a particular service; choose mono or stereo pair and identify Lead Vocal / Backing Vocal roles.
 - **Service lineup:** select library items for the current service and assign their physical M32 input independently from their desk channel/fader. Stereo assignments reserve adjacent input numbers and desk channels.
-- **Stage layout:** add stageboxes with configurable XLR and RJ45 socket counts, edit socket labels, associate sockets with library sources and drag equipment around a top-down canvas.
+- **Stage layout:** add stageboxes with configurable XLR and RJ45 socket counts (editable after creation), edit socket labels, associate sockets with library sources and drag equipment around a top-down canvas.
 - **Input mapping:** map each stagebox XLR input directly to an M32 physical input in the Local, AES50-A, AES50-B or Card bank. Radio microphones can be represented by a stagebox named "Radio Mics". Desk channel/fader assignment remains separate.
 - **Output mapping:** define destination equipment and systems (FOH, monitors, IEM, broadcast, recording or other) and map M32 Local XLR (1–16), AES50-A/B (1–48) and Card (1–32) physical outputs to them. Optional destination channel labels support Left/Right and named feeds. Duplicate physical outputs and repeated labels within a destination are validated.
 - **Full configuration backup:** export/import one versioned JSON configuration containing the library, service lineup, stage layout, stageboxes, socket labels, physical input mappings and metadata. Import is validated and requires confirmation before replacing the current workspace.
