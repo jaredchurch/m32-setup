@@ -9,11 +9,12 @@ Open `index.html` in a modern browser. No build step, package installation or se
 ## Current workspace capabilities
 
 - **Reusable source library:** define performers and instruments independently of a particular service; choose mono or stereo pair and identify Lead Vocal / Backing Vocal roles.
-- **Service lineup:** select library items for the current service and assign their physical M32 input independently from their desk channel/fader. Stereo assignments reserve adjacent input numbers and desk channels.
+- **Service lineup:** select library items for the current service and assign their physical M32 inputs. Stereo assignments reserve adjacent input numbers.
 - **Stage layout:** add stageboxes with configurable XLR and RJ45 socket counts (editable after creation), edit socket labels, associate sockets with library sources, drag equipment around a top-down canvas and filter stageboxes by name.
-- **Input mapping:** map each stagebox XLR input directly to an M32 physical input in the Local, AES50-A, AES50-B, Card or Aux 1–6 bank, and separately assign an M32 desk channel/fader (CH 01–32). Search/filter by stagebox name, input label, associated source name, physical input target or desk channel; filter the list to show all, physically mapped or unmapped inputs. Radio microphones can be represented by a stagebox named "Radio Mics".
+- **Input mapping:** map each stagebox XLR input directly to an M32 physical input in the Local, AES50-A, AES50-B, Card or Aux 1–6 bank. Search/filter by stagebox name, input label, associated source name or physical input target; filter the list to show all, physically mapped or unmapped inputs. Radio microphones can be represented by a stagebox named "Radio Mics".
+- **M32 channel mapping:** assign each of the 32 mono channel strips and six Aux channel strips to a physical input. The same physical input can feed multiple channel strips. FX Returns 1–4 Left/Right are listed as internal effects-engine returns and are not assignable to physical inputs.
 - **Output mapping:** define destination equipment and systems (FOH, monitors, IEM, broadcast, recording or other) and map M32 Local XLR (1–16), AES50-A/B (1–48) and Card (1–32) physical outputs to them. Optional destination channel labels support Left/Right and named feeds. Duplicate physical outputs and repeated labels within a destination are validated.
-- **Full configuration backup:** export/import one versioned JSON configuration containing the library, service lineup, stage layout, stageboxes, socket labels, physical input mappings and metadata. Import is validated and requires confirmation before replacing the current workspace.
+- **Full configuration backup:** export/import one versioned JSON configuration containing the library, service lineup, stage layout, stageboxes, socket labels, physical input mappings, M32 channel-to-input mappings and metadata. Import is validated and requires confirmation before replacing the current workspace.
 - **Browser persistence:** changes are saved in local browser storage. Export a backup to transfer the setup to another browser or device.
 - **M32 scene reference:** optionally load a scene file locally to inspect channel, bus, DCA and output-route names. The scene is not uploaded.
 
@@ -25,7 +26,7 @@ Scene files and configuration data are not sent to a server. Do not commit real 
 
 ## Recent implementation notes
 
-- Stagebox name search and input-mapping text search are available in the UAT application. The input-mapping view also provides a physical-input status filter (all, mapped or unmapped) and a separate desk-channel/fader assignment for each stagebox input. These filters are display-only and do not alter configuration or routing records.
+- Stagebox name search and input-mapping text search are available in the UAT application. The input-mapping view also provides a physical-input status filter (all, mapped or unmapped) and These filters are display-only and do not alter configuration or routing records.
 - Input mapping includes the M32 Aux 1–6 input bank in addition to Local, AES50-A, AES50-B and Card.
 - Stagebox XLR and RJ45 port counts can be edited after creation. The default is three of each.
 - The Pages publishing workflow gives each run attempt a unique artifact name, avoiding duplicate-artifact failures when a failed deployment is retried.
