@@ -18,6 +18,13 @@
 <section id="library" class="panel" hidden>
 <div class="section-head"><div><p class="eyebrow">02 / REUSABLE DEFINITIONS</p><h2>Source library</h2><p>Keep more sources here than the 32 desk channels available. Only the current service lineup uses console channels.</p></div></div>
 <div class="editor"><label>Source / performer name<input id="lib-name" placeholder="e.g. Lead Vocal"></label><label>Category<select id="lib-category"><option>Vocal</option><option>Drums</option><option>Guitar</option><option>Bass</option><option>Keys</option><option>Playback</option><option>Other</option></select></label><label>Configuration<select id="lib-mode"><option value="mono">Mono</option><option value="stereo">Stereo pair</option></select></label><label>Vocal role<select id="lib-vocal"><option value="">Not applicable</option><option>Lead Vocal</option><option>Backing Vocal</option></select></label><label>Notes<input id="lib-notes" placeholder="Optional notes"></label><button id="add-library" class="primary">Add source</button></div>
+<div class="editor combine-editor">
+<label>Left source<select id="combine-left"><option value="">Choose a mono source…</option></select></label>
+<label>Right source<select id="combine-right"><option value="">Choose a mono source…</option></select></label>
+<label>Stereo pair name<input id="combine-name" placeholder="e.g. Stereo Keys"></label>
+<button id="combine-sources" class="secondary" data-combine-sources>Combine as stereo pair</button>
+<p class="muted">The original mono sources and their existing assignments are retained. The new stereo item keeps each source's scene configuration as Left and Right.</p>
+</div>
 <div id="library-list" class="cards"></div>
 </section>
 <section id="stage" class="panel" hidden>
