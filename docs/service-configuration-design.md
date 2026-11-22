@@ -14,6 +14,24 @@ Extend M32 Service Setup from a scene-inspection prototype into a reusable servi
 - **Library item**: a reusable performer/instrument/source definition. It exists independently of whether it is selected for a particular service.
 - **Service assignment**: the use of a library item in one service, with its physical input and desk-channel allocation.
 
+## Physical signal path and patch panel
+
+The configuration must model the complete physical signal path, not only the stagebox-to-console assignment:
+
+**Performer / instrument → stagebox input → stagebox output → patch-panel port → patch-panel connection → M32 physical input → M32 desk channel.**
+
+- Add one or more configurable patch panels to the venue/stage infrastructure model.
+- Each patch panel has a name, optional make/model, a configurable number of ports and optional notes.
+- Each port has a stable identity and a user-editable label/number.
+- Allow a stagebox output to be connected to a patch-panel port, and a patch-panel port to be connected onward to an M32 physical input.
+- Represent direct connections and, where required by the real installation, normalled/half-normalled or thru relationships. Do not assume a normalled connection unless the user configures it.
+- Make every connection explicit and inspectable; show source, intermediate ports and destination.
+- Detect multiple sources assigned to the same port/input, incomplete paths, incompatible connection types where known, and disconnected endpoints. Do not silently resolve conflicts.
+- Support patch-panel layouts with front/rear or input/output views where useful, while retaining a single underlying port/connection model.
+- Include patch panels, port definitions, connection relationships and labels in the full configuration import/export.
+- The stage layout should visually show stageboxes and patch panels in their physical positions. A separate patching view should make the signal route and port-to-port connections easy to inspect and edit.
+- Keep physical signal routing separate from the M32 desk-channel assignment: the final M32 input is then assigned to a channel strip/fader.
+
 ## Functional requirements
 
 ### 1. Reusable source library
@@ -84,8 +102,9 @@ The app is a static browser application. Configuration data should be stored loc
 
 1. Establish the versioned configuration data model, full import/export and browser-local persistence.
 2. Build the reusable source library and service lineup with independent physical-input and desk-channel assignment, mono/stereo support and validation.
-3. Build the visual stage canvas and configurable stage boxes/sockets, connected to the same source/service data model.
-4. Implement and test native .scn generation as a separately validated increment.
+3. Build the visual stage canvas with configurable stage boxes/sockets and patch panels, connected through an explicit physical signal-path model.
+4. Build a patching view for tracing and editing stagebox-to-patch-panel-to-M32 connections.
+5. Implement and test native .scn generation as a separately validated increment.
 
 ## Acceptance principles
 
@@ -94,6 +113,9 @@ The app is a static browser application. Configuration data should be stored loc
 - Physical input and desk channel are visibly separate fields and can differ.
 - Stereo allocations are validated for both physical inputs and desk channels.
 - Stage-box socket labels are editable and remain associated with their stage-box identity.
+- Patch panels and their ports can be configured, positioned and connected to stagebox outputs and M32 physical inputs.
+- A user can trace a signal from its stage source through every patch-panel connection to the M32 physical input and desk channel.
+- Conflicting, incomplete or disconnected patch paths are clearly reported.
 - Export then import round-trips the entire configuration without losing library entries, stage boxes, positions, names or assignments.
 - Import errors leave the current workspace unchanged.
 - No private scene or performer data is transmitted to a server.
