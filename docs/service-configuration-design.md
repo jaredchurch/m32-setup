@@ -102,14 +102,14 @@ Import must validate the format and version before replacing current data. Inval
 
 Export must download the complete package as one file. The existing service-profile JSON export may remain as a separate diagnostic/interchange export, but must not be presented as a full backup.
 
-### 8. Native M32 scene generation (separate increment)
+### 8. Native M32 scene export
 
-- Generate a genuine M32 text .scn file from a known-good user-supplied base scene.
+- Generate a genuine M32 text .scn file from a known-good user-supplied base scene. (Implemented in the current increment.)
 - Preserve unrelated scene settings, including buses, DCAs, effects and output routing unless explicitly changed by the user.
-- Apply validated channel names, physical input patching, mono/stereo linking and any required channel parameters.
-- Do not infer undocumented scene tokens. Verify syntax against authoritative M32 documentation and controlled fixtures.
-- Keep the original uploaded scene unchanged.
-- Clearly warn that generated scenes must be tested on the actual console before live use.
+- Apply validated physical input assignments to CH 01–32 and Aux 1–6 by updating the input-source field in each `/ch/NN/config` or `/auxin/NN/config` entry. Preserve channel names, icons, colours and all other parameters. Mono/stereo linking and other channel parameters are not changed by this increment.
+- Use the documented M32 input-source index ranges: Local 1–32, AES50-A 33–80, AES50-B 81–128, Card 129–160 and Aux 161–166. Require each mapped strip to have a matching config entry in the base scene; stop export if any entry is missing or duplicated.
+- Keep the original uploaded scene unchanged. The base scene is held in memory only and is not uploaded or stored in the configuration.
+- Clearly warn that generated scenes must be checked in M32-Edit and tested on the actual console before live use.
 - Scene generation is separate from exporting/backing up the full service configuration.
 
 ## Storage and privacy
@@ -123,7 +123,7 @@ The app is a static browser application. Configuration data is stored locally in
 3. Build the visual stage canvas with configurable stageboxes and sockets.
 4. Build the direct stagebox XLR-to-M32 physical input mapping view and validation.
 5. Implement M32 output mapping as a separate increment.
-6. Implement and test native .scn generation as a separately validated increment.
+6. Implemented initial native .scn export for CH/Aux input-source assignments using a known-good base scene. Further routing and output-generation capabilities remain separate increments.
 
 The initial output-mapping increment is implemented in UAT: destinations can be defined and M32 physical outputs mapped to them. Internal M32 source-to-output routing and native scene generation remain out of scope for that increment.
 
