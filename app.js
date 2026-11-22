@@ -30,7 +30,7 @@ const block=(label,value)=>value&&Array.isArray(value.lines)?'<details class="sc
 if(sceneConfig.channels)return '<div class="scene-config-wrap">'+block("Left",sceneConfig.channels.left)+block("Right",sceneConfig.channels.right)+'</div>';
 return block("M32 channel configuration",sceneConfig);
 }
-function categoryOptions(value){return ["Vocal","Drums","Guitar","Bass","Keys","Playback","Other"].map(v=>'<option '+(v===value?"selected":"")+'>'+v+'</option>').join("")}
+function categoryOptions(value){return ["Vocal","Speaker","Drums","Guitar","Bass","Keys","Playback","Other"].map(v=>'<option '+(v===value?"selected":"")+'>'+v+'</option>').join("")}
 function vocalOptions(value){return ["","Lead Vocal","Backing Vocal"].map(v=>'<option value="'+v+'" '+(v===value?"selected":"")+'>'+(v||"Not applicable")+'</option>').join("")}
 function renderLibrary(){
 $("library-list").innerHTML=config.library.length?config.library.map(x=>{
