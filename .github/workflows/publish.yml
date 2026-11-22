@@ -1,0 +1,59 @@
+name: Publish M32 Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Where to publish
+        required: true
+        type: choice
+        options:
+          - publish to dev
+          - publish to prod
+
+permissions:
+  contents: write
+
+concurrency:
+  group: m32-setup-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Create publication directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p publish
+          cp index.html app.js styles.css publish/
+
+          if [[ "${{ inputs.target }}" == "publish to prod" ]]; then
+            VERSION="v$(date -u +'%Y.%m.%d')-${GITHUB_RUN_NUMBER}"
+            mkdir -p "publish/versions/${VERSION}"
+            cp index.html app.js styles.css "publish/versions/${VERSION}/"
+            echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./publish
+          destination_dir: ${{ inputs.target == 'publish to dev' && 'dev' || '.' }}
+          keep_files: true
+
+      - name: Report published locations
+        shell: bash
+        run: |
+          if [[ "${{ inputs.target }}" == "publish to dev" ]]; then
+            echo "Published development build to: /dev/"
+          else
+            echo "Published production build to: / and /versions/${VERSION}/"
+          fi
