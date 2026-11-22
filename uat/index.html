@@ -7,10 +7,10 @@
 <section class="hero"><div><p class="eyebrow">SERVICE CONFIGURATION WORKSPACE</p><h1>Build the signal path.<br><em>Before the first soundcheck.</em></h1><p>Maintain a reusable source library, lay out stageboxes, map physical inputs and outputs, and define destination equipment, and keep a portable copy of the complete setup.</p></div><aside><h2>Configuration</h2><p>Saved automatically in this browser. Export a full JSON backup to move it to another device.</p><div class="actions"><button id="export-config" class="primary">Export full configuration ↓</button><label class="file-button">Import configuration ↑<input id="import-config" type="file" accept=".json,application/json"></label></div><small id="save-state">Not saved yet</small></aside></section>
 <section class="toolbar"><div><b>Workspace</b><span> · configuration is independent of the M32 scene file</span></div><button id="reset-config" class="quiet">Reset workspace</button></section>
 <nav class="tabs">
-<button class="tab active" data-tab="service">Service lineup</button><button class="tab" data-tab="library">Source library</button><button class="tab" data-tab="stage">Stage layout</button><button class="tab" data-tab="patching">Input mapping</button><button class="tab" data-tab="outputs">Output mapping</button><button class="tab" data-tab="console">M32 &amp; scene</button>
+<button class="tab active" data-tab="service">Service lineup</button><button class="tab" data-tab="library">Source library</button><button class="tab" data-tab="stage">Stage layout</button><button class="tab" data-tab="patching">Input mapping</button><button class="tab" data-tab="channels">M32 channel mapping</button><button class="tab" data-tab="outputs">Output mapping</button><button class="tab" data-tab="console">M32 &amp; scene</button>
 </nav>
 <section id="service" class="panel">
-<div class="section-head"><div><p class="eyebrow">01 / CURRENT SERVICE</p><h2>Service lineup</h2><p>Select the sources needed for this service. Physical input and desk channel are separate assignments.</p></div></div>
+<div class="section-head"><div><p class="eyebrow">01 / CURRENT SERVICE</p><h2>Service lineup</h2><p>Select the sources needed for this service and assign their physical inputs. Fader routing is managed separately in M32 channel mapping.</p></div></div>
 <div class="inline-form"><label>Service name<input id="service-name" placeholder="Sunday service"></label><label>Date<input id="service-date" type="date"></label></div>
 <div class="form-row"><label>Add from source library<select id="add-assignment"></select></label><button id="add-assignment-btn" class="primary">Add to service</button></div>
 <div id="assignment-list" class="cards"></div><div id="validation" class="notice"></div>
@@ -37,15 +37,22 @@
 <div id="equipment-editors" class="cards"></div>
 </section>
 <section id="patching" class="panel" hidden>
-<div class="section-head"><div><p class="eyebrow">04 / PHYSICAL SIGNAL ROUTING</p><h2>Stagebox input mapping</h2><p>Map each stagebox XLR input directly to any available M32 physical input. The desk channel/fader assignment is configured separately in the service lineup.</p></div></div>
-<div class="signal-flow"><b>Stagebox XLR input</b><i>→</i><b>M32 physical input</b><i>→</i><b>M32 desk channel / fader</b></div>
+<div class="section-head"><div><p class="eyebrow">04 / PHYSICAL SIGNAL ROUTING</p><h2>Stagebox input mapping</h2><p>Map each stagebox XLR input directly to any available M32 physical input. Fader assignments are managed separately in M32 channel mapping.</p></div></div>
+<div class="signal-flow"><b>Stagebox XLR input</b><i>→</i><b>M32 physical input</b></div>
 <p class="patching-help">Choose an M32 physical input target for each stagebox input. Local and Card inputs 1–32, AES50-A/B inputs 1–48, and Aux inputs 1–6 are available. Leave unused inputs unmapped.</p>
 <div class="library-tools patch-search"><label>Search input mappings<input id="patch-mapping-search" type="search" placeholder="Filter by stagebox, input, source or M32 target"></label><label>Physical input status<select id="patch-mapping-status"><option value="all">All inputs</option><option value="mapped">Mapped to physical input</option><option value="unmapped">Not mapped to physical input</option></select></label></div>
 <div id="patch-connections" class="patch-matrix"></div>
 <div id="patch-validation" class="notice"></div>
 </section>
+<section id="channels" class="panel" hidden>
+<div class="section-head"><div><p class="eyebrow">05 / CONSOLE CHANNEL ROUTING</p><h2>M32 channel mapping</h2><p>Assign each channel strip/fader to an M32 physical input. A physical input can feed multiple channel strips. FX Returns 1–4 Left/Right are internal effects-engine returns and cannot be patched from a physical input here.</p></div></div>
+<div class="signal-flow"><b>M32 physical input</b><i>→</i><b>CH 01–32 / Aux 1–6</b></div>
+<div class="library-tools patch-search"><label>Search channel mappings<input id="channel-mapping-search" type="search" placeholder="Filter by channel or physical input"></label></div>
+<div id="channel-mapping-list" class="patch-matrix"></div>
+<div id="channel-mapping-validation" class="notice"></div>
+</section>
 <section id="outputs" class="panel" hidden>
-<div class="section-head"><div><p class="eyebrow">05 / PHYSICAL SIGNAL ROUTING</p><h2>M32 output mapping</h2><p>Define the equipment and systems receiving audio, then map each M32 physical output to its destination. This is separate from input mapping and desk-channel assignments.</p></div></div>
+<div class="section-head"><div><p class="eyebrow">06 / PHYSICAL OUTPUT ROUTING</p><h2>M32 output mapping</h2><p>Define the equipment and systems receiving audio, then map each M32 physical output to its destination. This is separate from input mapping and desk-channel assignments.</p></div></div>
 <div class="signal-flow"><b>M32 physical output</b><i>→</i><b>Destination equipment</b></div>
 <div class="editor output-destination-editor">
 <label>Destination name<input id="output-destination-name" placeholder="e.g. FOH Left"></label>
@@ -60,9 +67,10 @@
 <div id="output-validation" class="notice"></div>
 </section>
 <section id="console" class="panel" hidden>
-<div class="section-head"><div><p class="eyebrow">06 / CONSOLE REFERENCE</p><h2>M32 scene inspector</h2><p>Optionally load a known-good scene for reference. It stays in this browser; this version does not generate or upload native scene files.</p></div></div>
-<div class="scene-upload"><label>Open M32 scene (.scn)<input id="scene-file" type="file" accept=".scn,.txt"></label><div id="scene-summary" class="muted">No scene loaded.</div></div>
-<div id="scene-details"></div><button id="import-scene-sources" class="primary" disabled>Add selected channels to source library</button>
+<div class="section-head"><div><p class="eyebrow">07 / CONSOLE REFERENCE</p><h2>M32 scene inspector</h2><p>Load a known-good M32 scene as the template for native .scn export. The uploaded file stays in this browser.</p></div></div>
+<div class="scene-upload"><label>Open known-good M32 scene (.scn)<input id="scene-file" type="file" accept=".scn,.txt"></label><div id="scene-summary" class="muted">No scene loaded.</div></div>
+<div class="scene-export"><button id="export-scene" class="primary" disabled>Export M32 scene (.scn)</button><p id="scene-export-status" class="muted">Load a known-good M32 scene to enable export.</p></div>
+<div id="scene-details"></div><button id="import-scene-sources" class="secondary" disabled>Add selected channels to source library</button>
 </section>
-<footer>Local planning tool. No connection to the console, OSC control or native .scn generation is implemented yet. Confirm every physical connection and test any future generated scene on the actual console before live use.</footer>
+<footer>Local planning tool. No connection to the console or OSC control is implemented. Native .scn export uses a user-supplied base scene and updates only mapped CH/Aux input sources. Test generated scenes in M32-Edit and on the actual console before live use.</footer>
 </main><script src="app.js"></script></body></html>
