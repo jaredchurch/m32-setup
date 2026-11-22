@@ -7,7 +7,7 @@
 <section class="hero"><div><p class="eyebrow">SERVICE CONFIGURATION WORKSPACE</p><h1>Build the signal path.<br><em>Before the first soundcheck.</em></h1><p>Maintain a reusable source library, lay out stageboxes, map physical inputs and outputs, and define destination equipment, and keep a portable copy of the complete setup.</p></div><aside><h2>Configuration</h2><p>Saved automatically in this browser. Export a full JSON backup to move it to another device.</p><div class="actions"><button id="export-config" class="primary">Export full configuration ↓</button><label class="file-button">Import configuration ↑<input id="import-config" type="file" accept=".json,application/json"></label></div><small id="save-state">Not saved yet</small></aside></section>
 <section class="toolbar"><div><b>Workspace</b><span> · configuration is independent of the M32 scene file</span></div><button id="reset-config" class="quiet">Reset workspace</button></section>
 <nav class="tabs">
-<button class="tab active" data-tab="service">Service lineup</button><button class="tab" data-tab="library">Source library</button><button class="tab" data-tab="stage">Stage layout</button><button class="tab" data-tab="patching">Input mapping</button><button class="tab" data-tab="channels">M32 channel mapping</button><button class="tab" data-tab="outputs">Output mapping</button><button class="tab" data-tab="console">M32 &amp; scene</button>
+<button class="tab active" data-tab="service">Service lineup</button><button class="tab" data-tab="library">Source library</button><button class="tab" data-tab="stage">Stage layout</button><button class="tab" data-tab="patching">Input mapping</button><button class="tab" data-tab="channels">M32 channel mapping</button><button class="tab" data-tab="outputs">Output mapping</button><button class="tab" data-tab="console">Scene import / export</button>
 </nav>
 <section id="service" class="panel">
 <div class="section-head"><div><p class="eyebrow">01 / CURRENT SERVICE</p><h2>Service lineup</h2><p>Select the sources needed for this service and assign their physical inputs. Fader routing is managed separately in M32 channel mapping.</p></div></div>
@@ -47,6 +47,7 @@
 <section id="channels" class="panel" hidden>
 <div class="section-head"><div><p class="eyebrow">05 / CONSOLE CHANNEL ROUTING</p><h2>M32 channel mapping</h2><p>Assign each channel strip/fader to an M32 physical input. A physical input can feed multiple channel strips. FX Returns 1–4 Left/Right are internal effects-engine returns and cannot be patched from a physical input here.</p></div></div>
 <div class="signal-flow"><b>M32 physical input</b><i>→</i><b>CH 01–32 / Aux 1–6</b></div>
+<div class="scene-export-shortcut"><div><b>Ready to create your M32-Edit file?</b><p>Once your fader assignments are set, load a known-good scene and export the updated .scn file.</p></div><button id="open-scene-export" class="secondary">Open scene import / export →</button></div>
 <div class="library-tools patch-search"><label>Search channel mappings<input id="channel-mapping-search" type="search" placeholder="Filter by channel or physical input"></label></div>
 <div id="channel-mapping-list" class="patch-matrix"></div>
 <div id="channel-mapping-validation" class="notice"></div>
@@ -67,9 +68,9 @@
 <div id="output-validation" class="notice"></div>
 </section>
 <section id="console" class="panel" hidden>
-<div class="section-head"><div><p class="eyebrow">07 / CONSOLE REFERENCE</p><h2>M32 scene inspector</h2><p>Load a known-good M32 scene as the template for native .scn export. The uploaded file stays in this browser.</p></div></div>
-<div class="scene-upload"><label>Open known-good M32 scene (.scn)<input id="scene-file" type="file" accept=".scn,.txt"></label><div id="scene-summary" class="muted">No scene loaded.</div></div>
-<div class="scene-export"><button id="export-scene" class="primary" disabled>Export M32 scene (.scn)</button><p id="scene-export-status" class="muted">Load a known-good M32 scene to enable export.</p></div>
+<div class="section-head"><div><p class="eyebrow">07 / CONSOLE REFERENCE</p><h2>Scene import &amp; export</h2><p>Load a known-good scene exported from M32-Edit. The app applies your M32 channel input assignments and downloads a new native .scn file. Your original file is not changed.</p></div></div>
+<div class="scene-upload"><label>1. Load known-good M32 scene (.scn)<input id="scene-file" type="file" accept=".scn,.txt"></label><div id="scene-summary" class="muted">No scene loaded.</div></div>
+<div class="scene-export"><button id="export-scene" class="primary" disabled>2. Export M32 scene (.scn)</button><p id="scene-export-status" class="muted">Load a known-good M32 scene above. The export button will then become available.</p></div>
 <div id="scene-details"></div><button id="import-scene-sources" class="secondary" disabled>Add selected channels to source library</button>
 </section>
 <footer>Local planning tool. No connection to the console or OSC control is implemented. Native .scn export uses a user-supplied base scene and updates only mapped CH/Aux input sources. Test generated scenes in M32-Edit and on the actual console before live use.</footer>
