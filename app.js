@@ -150,7 +150,7 @@ mappings.forEach(m=>{const key=m.bank+" "+m.number;if(used.has(key))problems.pus
 $("output-validation").innerHTML=problems.length?'<b>Output mapping conflicts</b><ul>'+problems.map(p=>'<li>'+esc(p)+'</li>').join("")+'</ul>':'<b>Output mapping checks passed.</b> No duplicate physical outputs or destination labels detected.';
 }
 
-function render(){renderLibrary();renderAssignments();renderStage();renderPatching();renderChannelMapping();renderOutputMapping();persist()}
+function render(){renderChannelMapping();renderLibrary();renderAssignments();renderStage();renderPatching();renderOutputMapping();persist()}
 function addLib(){const name=$("lib-name").value.trim();if(!name)return alert("Enter a source name.");config.library.push({id:uid(),name,category:$("lib-category").value,mode:$("lib-mode").value,notes:$("lib-notes").value.trim(),sceneConfig:null});$("lib-name").value="";$("lib-notes").value="";render()}
 const refreshLibraryFilters=()=>renderLibrary();
 $("library-search").addEventListener("input",refreshLibraryFilters);
@@ -202,47 +202,7 @@ $("reset-config").onclick=()=>{if(!confirm("Reset the entire local workspace? Ex
 $("scene-file").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;scene=null;$("export-scene").disabled=true;$("scene-export-status").textContent="Reading base scene…";try{const txt=await f.text(),lines=txt.split(/\r?\n/),channels=[],buses=[],dcas=[],outputs=[],channelBlocks={};let title=f.name,version="";const h=lines.find(x=>x.startsWith("#"));const hm=h?.match(/^#([^#]+)#\s+"([^"]*)"/);if(hm){version=hm[1];title=hm[2]||title}for(const line of lines){let m;if(m=line.match(/^\/ch\/(\d{2})\//)){(channelBlocks[m[1]] ||= []).push(line);if(m=line.match(/^\/ch\/(\d{2})\/config\s+"([^"]*)"\s*(.*)$/))channels.push({n:+m[1],name:m[2].trim(),selected:true})}else if(m=line.match(/^\/bus\/(\d{2})\/config\s+"([^"]*)"/))buses.push(m[2]);else if(m=line.match(/^\/dca\/(\d+)\/config\s+"([^"]*)"/))dcas.push(m[2]);else if(m=line.match(/^\/outputs\/(main|aux|p16|aes|rec)\/(\d{2})\s+(.+)$/))outputs.push(m[0])}channels.forEach(c=>c.configLines=channelBlocks[String(c.n).padStart(2,"0")]||[]);scene={filename:f.name,title,version,channels,buses,dcas,outputs,lines};$("export-scene").disabled=false;$("scene-export-status").textContent="Base scene loaded. Export will update only mapped CH/Aux input-source assignments and preserve all other scene entries.";$("scene-summary").textContent=f.name+" · format "+(version||"unknown")+" · "+channels.length+" input channels · "+buses.length+" buses · "+dcas.length+" DCAs · "+outputs.length+" output routes. Select channel names to add."; $("scene-details").innerHTML='<div class="scroll"><table><thead><tr><th>Add</th><th>Desk channel</th><th>Scene source name</th></tr></thead><tbody>'+channels.map((c,i)=>'<tr><td><input type="checkbox" data-scene-channel="'+i+'" checked></td><td>CH '+String(c.n).padStart(2,"0")+'</td><td>'+esc(c.name||("CH "+c.n))+'</td></tr>').join("")+'</tbody></table></div>'; $("import-scene-sources").disabled=!channels.length;config.sceneReference={filename:f.name,title,version};persist()}catch(err){scene=null;$("export-scene").disabled=true;$("scene-export-status").textContent="Scene could not be loaded; export is unavailable.";alert("Could not read this M32 scene file: "+err.message)}};
 $("export-scene").onclick=()=>{if(!scene?.lines)return alert("Load a known-good M32 scene first.");try{const text=buildSceneText(scene.lines,config.connections.channelToInput),base=(config.service.name||scene.title||"m32-service").trim().replace(/[^a-z0-9._-]+/gi,"-").replace(/^-+|-+$/g,"")||"m32-service",filename=base.toLowerCase().endsWith(".scn")?base:base+".scn";downloadText(filename,text);$("scene-export-status").textContent="Exported "+config.connections.channelToInput.length+" channel input assignment(s) from "+scene.filename+". Other scene settings were preserved."; }catch(err){alert("Scene export stopped. No file was generated.\n\n"+err.message);$("scene-export-status").textContent="Export blocked: "+err.message}};
 $("import-scene-sources").onclick=()=>{if(!scene)return;const chosen=[...$("scene-details").querySelectorAll("[data-scene-channel]:checked")].map(x=>scene.channels[+x.dataset.sceneChannel]);let added=0;chosen.forEach(c=>{const name=(c.name||("CH "+c.n)).trim();if(!name)return;const sceneConfig={format:"M32 .scn channel block",sourceFile:scene.filename,channelNumber:c.n,channelName:name,lines:[...(c.configLines||[])]};let importName=name,suffix=2;while(config.library.some(x=>x.name.toLowerCase()===importName.toLowerCase())){importName=name+" ("+suffix+")";suffix++}config.library.push({id:uid(),name:importName,category:"Other",mode:"mono",notes:"Imported from "+scene.filename+" (M32 CH "+String(c.n).padStart(2,"0")+")"+(importName!==name?" · Original scene name: "+name:""),sceneConfig});added++});render();alert(added+" source"+(added===1?"":"s")+" imported. Duplicate names were given unique numbered suffixes.")};
-// Temporary navigation diagnostics. All messages use the [M32 debug] prefix.
-document.addEventListener("click",e=>{
-  const control=e.target.closest("a,button,[role='link'],[role='tab']");
-  if(!control)return;
-  const isNav=control.matches(".tab,[role='tab'],a");
-  if(!isNav)return;
-  const info={
-    label:(control.innerText||control.getAttribute("aria-label")||control.title||"").trim(),
-    element:control.tagName.toLowerCase(),
-    tab:control.dataset.tab||null,
-    href:control.getAttribute("href"),
-    target:e.target.tagName.toLowerCase(),
-    defaultPrevented:e.defaultPrevented
-  };
-  console.info("[M32 debug] Navigation click",info);
-  if(control.matches(".tab")&&control.dataset.tab){
-    queueMicrotask(()=>{
-      const panel=$(control.dataset.tab);
-      console.info("[M32 debug] Navigation result",{
-        requestedTab:control.dataset.tab,
-        panelFound:!!panel,
-        panelHidden:panel?panel.hidden:null,
-        activeTab:document.querySelector(".tab.active")?.dataset.tab||null,
-        visiblePanels:[...document.querySelectorAll(".panel")].filter(p=>!p.hidden).map(p=>p.id)
-      });
-    });
-  }
-},true);
-window.addEventListener("error",e=>console.error("[M32 debug] JavaScript error",{
-  message:e.message,source:e.filename,line:e.lineno,column:e.colno
-}));
-window.addEventListener("unhandledrejection",e=>console.error("[M32 debug] Unhandled promise rejection",e.reason));
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
-  console.info("[M32 debug] Tab handler running",{tab:b.dataset.tab});
-  tab(b.dataset.tab);
-}));
-console.info("[M32 debug] App initialising",{
-  path:location.pathname,
-  tabs:[...document.querySelectorAll(".tab")].map(b=>({label:b.innerText,tab:b.dataset.tab})),
-  panels:[...document.querySelectorAll(".panel")].map(p=>({id:p.id,hidden:p.hidden})),
-  scriptReady:document.readyState
-});
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{tab(b.dataset.tab);if(b.dataset.tab==="channels")renderChannelMapping()}));
+$("open-scene-export").addEventListener("click",()=>{tab("console");$("scene-file").focus()});
 loadStored();$("service-name").value=config.service.name||"";$("service-date").value=config.service.date||"";render();
 })();
