@@ -9,11 +9,10 @@ Open `index.html` in a modern browser. No build step, package installation or se
 ## Current workspace capabilities
 
 - **Reusable source library:** define performers and instruments independently of a particular service; choose mono or stereo pair and identify Lead Vocal / Backing Vocal roles.
-- **Service lineup:** select library items for the current service and assign their physical input source/number independently from their M32 desk channel. Stereo assignments reserve adjacent input numbers and desk channels.
-- **Stage layout:** add stageboxes with configurable socket counts, edit socket labels, associate sockets with library sources and drag equipment around a top-down canvas.
-- **Patch panels:** add panels with configurable port counts and labels; connect stagebox sockets to panel ports, then panel ports to Local, AES50-A, AES50-B or Card physical M32 inputs. Direct, normalled, half-normalled and thru connection types can be recorded.
-- **Signal-path trace:** service assignments show the configured route from stagebox socket through the patch panel to the M32 input and desk channel when the matching route is present.
-- **Full configuration backup:** export/import one versioned JSON configuration containing the library, service lineup, stage layout, stageboxes, patch panels, socket/port labels, physical connections and metadata. Import is validated and requires confirmation before replacing the current workspace.
+- **Service lineup:** select library items for the current service and assign their physical M32 input independently from their desk channel/fader. Stereo assignments reserve adjacent input numbers and desk channels.
+- **Stage layout:** add stageboxes with configurable XLR and RJ45 socket counts, edit socket labels, associate sockets with library sources and drag equipment around a top-down canvas.
+- **Input mapping:** map each stagebox XLR input directly to an M32 physical input in the Local, AES50-A, AES50-B or Card bank. Radio microphones can be represented by a stagebox named "Radio Mics". Desk channel/fader assignment remains separate.
+- **Full configuration backup:** export/import one versioned JSON configuration containing the library, service lineup, stage layout, stageboxes, socket labels, physical input mappings and metadata. Import is validated and requires confirmation before replacing the current workspace.
 - **Browser persistence:** changes are saved in local browser storage. Export a backup to transfer the setup to another browser or device.
 - **M32 scene reference:** optionally load a scene file locally to inspect channel, bus, DCA and output-route names. The scene is not uploaded.
 
@@ -26,22 +25,18 @@ Scene files and configuration data are not sent to a server. Do not commit real 
 ## Known limitations / next increments
 
 - This is a planning workspace, not an M32 remote-control application. It does not connect to the console or send OSC.
-- Patch paths are explicit planning records. The app does not discover physical wiring, determine whether a panel is actually normalled, or electrically validate a connection.
-- Collision checks cover duplicate physical-input and desk-channel allocations in the service lineup and duplicate patch-panel/M32 destinations. The operator must still confirm real-world wiring and console configuration.
-- The stage canvas currently positions equipment visually; it is not a scale drawing or cable-length planner.
+- Input mappings are explicit planning records. The operator must confirm real-world wiring and console configuration.
+- The stage canvas positions equipment visually; it is not a scale drawing or cable-length planner.
 - Native M32 `.scn` generation is **not implemented**. A known-good base scene and verified M32 syntax will be required before that is attempted. Preserve the original scene and test any future generated file on the actual console before live use.
-- Future work should deepen import validation, support richer front/rear patch-panel views, provide a more complete end-to-end patch audit (including stereo pairs), and add automated browser tests.
+- M32 output routing and output mapping are recorded for a later increment in [issue #1](https://github.com/jaredchurch/m32-setup/issues/1).
 
 ## Publish
 
-Publishing remains manual through GitHub Actions:
+Publishing is automated through GitHub Actions:
 
-1. Open the repository's **Actions** tab.
-2. Select **Publish M32 Setup**.
-3. Choose **publish to dev** or **publish to prod**, then run the workflow.
+- Commits to `UAT` publish to https://jaredchurch.github.io/m32-setup/uat/
+- Commits to `main` publish Production at https://jaredchurch.github.io/m32-setup/, retain a version under `/versions/`, then merge `main` back into `UAT` and trigger a UAT publication.
+- Manual workflow dispatch is also available from the matching branch.
+- The previous `/dev/` address is retired.
 
-- **publish to dev** publishes the current build under `/dev/` and leaves the production site and version history untouched.
-- **publish to prod** publishes the current build at the site root and also creates a retained version under `/versions/`.
-- Production publication is deliberately separate from development work. Do not publish without explicit approval.
-
-All GitHub Actions must use Node.js 24-compatible actions; do not introduce actions that depend on deprecated Node.js 20.
+All GitHub Actions must use supported Node.js 24-compatible action runtimes; do not introduce actions that depend on deprecated Node.js 20.
