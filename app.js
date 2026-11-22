@@ -17,7 +17,7 @@ if(!Array.isArray(x.outputs.destinations))x.outputs.destinations=[];
 if(!Array.isArray(x.connections.m32ToDestinations))x.connections.m32ToDestinations=[];
 const ids=new Set(),addId=o=>{if(!o||typeof o.id!=="string"||!o.id||ids.has(o.id))throw Error("Configuration contains a missing or duplicate item ID.");ids.add(o.id)};
 const libs=new Set();x.library.forEach(l=>{addId(l);if(typeof l.name!=="string"||!["mono","stereo"].includes(l.mode))throw Error("A library item has an invalid name or channel mode.");if(!Object.prototype.hasOwnProperty.call(l,"sceneConfig"))l.sceneConfig=null;libs.add(l.id)});
-x.service.assignments.forEach(a=>{addId(a);if(!libs.has(a.libraryId)||!["Local","AES50-A","AES50-B","Card","Aux"].includes(a.source)||!Number.isInteger(+a.input)||+a.input<1||+a.input>inputLimit(a.source)throw Error("A service assignment contains an invalid source or channel allocation.")});
+x.service.assignments.forEach(a=>{addId(a);if(!libs.has(a.libraryId)||!["Local","AES50-A","AES50-B","Card","Aux"].includes(a.source)||!Number.isInteger(+a.input)||+a.input<1||+a.input>inputLimit(a.source))throw Error("A service assignment contains an invalid source or channel allocation.")});
 const sockets=new Set();x.stage.stageboxes.forEach(b=>{addId(b);if(!Array.isArray(b.sockets))throw Error("A stagebox has no valid socket list.");b.sockets.forEach(t=>{addId(t);if((t.type||"XLR")==="XLR")sockets.add(b.id+":"+t.id)})});
 if(!Array.isArray(x.connections.stageToM32))throw Error("Direct input mappings are missing or invalid.");
 if(!Array.isArray(x.connections.channelToInput)){
