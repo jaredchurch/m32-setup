@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Create publication directory
         shell: bash
@@ -49,11 +49,28 @@ jobs:
           destination_dir: ${{ inputs.target == 'publish to dev' && 'dev' || '.' }}
           keep_files: true
 
-      - name: Report published locations
+      - name: Write publication summary
         shell: bash
         run: |
+          set -euo pipefail
+          SITE_URL="https://jaredchurch.github.io/m32-setup"
+
           if [[ "${{ inputs.target }}" == "publish to dev" ]]; then
-            echo "Published development build to: /dev/"
+            PUBLISHED_URL="${SITE_URL}/dev/"
+            {
+              echo "## M32 Setup published"
+              echo
+              echo "- **Target:** Development"
+              echo "- **Published app:** [Open development build](${PUBLISHED_URL})"
+            } >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "Published production build to: / and /versions/${VERSION}/"
+            VERSION_URL="${SITE_URL}/versions/${VERSION}/"
+            {
+              echo "## M32 Setup published"
+              echo
+              echo "- **Target:** Production"
+              echo "- **Version:** ${VERSION}"
+              echo "- **Versioned app:** [Open ${VERSION}](${VERSION_URL})"
+              echo "- **Current production app:** [Open production site](${SITE_URL}/)"
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
