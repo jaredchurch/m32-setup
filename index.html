@@ -31,16 +31,15 @@
 <section id="stage" class="panel" hidden>
 <div class="section-head"><div><p class="eyebrow">03 / PHYSICAL EQUIPMENT</p><h2>Stage layout</h2><p>Arrange physical stageboxes and patch panels. Drag equipment to position it; edit its name, model and sockets below.</p></div></div>
 <div class="form-row"><label>Equipment name<input id="box-name" placeholder="Stagebox A"></label><label>Model / type<input id="box-model" placeholder="DL16 / SD16 / custom"></label><label>XLR input ports<input id="box-xlr-count" type="number" min="0" max="64" value="3"></label><label>RJ45 ports<input id="box-rj45-count" type="number" min="0" max="16" value="3"></label><button id="add-stagebox" class="primary">Add stagebox</button></div>
-<div class="form-row"><label>Patch panel name<input id="stage-panel-name" placeholder="Stage patch panel"></label><label>Panel model<input id="stage-panel-model" placeholder="Optional model"></label><label>Ports<input id="stage-panel-count" type="number" min="1" max="96" value="24"></label><button id="add-stage-panel" class="secondary">Add patch panel</button></div>
+<div class="form-row"><label>Patch panel name<input id="stage-panel-name" placeholder="Stage patch panel"></label><label>Panel model<input id="stage-panel-model" placeholder="Optional model"></label><label>Ports<input id="stage-panel-count" type="number" min="1" max="96" value="32"></label><button id="add-stage-panel" class="secondary">Add patch panel</button></div>
 <div id="stage-canvas" class="stage-canvas"><span class="canvas-hint">Your stage equipment will appear here.</span></div>
 <div id="equipment-editors" class="cards"></div>
 </section>
 <section id="patching" class="panel" hidden>
 <div class="section-head"><div><p class="eyebrow">04 / PHYSICAL SIGNAL ROUTING</p><h2>Patch panel &amp; signal path</h2><p>Connect a stagebox output to a patch-panel port, then route that port to an M32 physical input. The desk channel assignment is configured separately in the service lineup.</p></div></div>
 <div class="signal-flow"><span>Source</span><b>Stagebox socket</b><i>→</i><b>Patch-panel port</b><i>→</i><b>M32 physical input</b><i>→</i><b>Desk channel</b></div>
-<div class="editor patch-editor"><label>Stagebox socket<select id="route-socket"></select></label><label>Patch-panel port<select id="route-port"></select></label><label>Connection type<select id="route-type"><option value="direct">Direct</option><option value="normalled">Normalled</option><option value="half-normalled">Half-normalled</option><option value="thru">Thru</option></select></label><button id="connect-stage-panel" class="primary">Connect stagebox → panel</button></div>
-<div class="editor patch-editor"><label>Patch-panel port<select id="out-port"></select></label><label>M32 input source<select id="out-source"><option>Local</option><option>AES50-A</option><option>AES50-B</option><option>Card</option></select></label><label>Input number<input id="out-number" type="number" min="1" max="48" value="1"></label><button id="connect-panel-m32" class="primary">Connect panel → M32</button></div>
-<div id="patch-connections" class="cards"></div>
+<p class="patching-help">Each row represents one physical patch-panel input. Choose the stagebox XLR socket feeding that port, then choose the M32 input bank and input number it is wired to. Leave either side as “Not connected” when unused.</p>
+<div id="patch-connections" class="patch-matrix"></div>
 <div id="patch-validation" class="notice"></div>
 </section>
 <section id="console" class="panel" hidden>
