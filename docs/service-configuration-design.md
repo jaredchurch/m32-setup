@@ -60,7 +60,7 @@ The library may contain more items than the console channel strips. Only items a
 
 ### 4. Direct input mapping
 
-- Provide a mapping view that lists every XLR input socket on every stagebox, with text search across stagebox names, input labels, associated source names and existing M32 physical input targets.
+- Provide a mapping view that lists every XLR input socket on every stagebox, with separate visible columns for the associated source-library name, stagebox name/socket label and M32 physical input target. For stereo library sources, show the Left/Right side. Text search must cover stagebox names, input labels, associated source names/categories and existing M32 physical input targets.
 - Allow each stagebox XLR input to map directly to any available M32 physical input target in Local, AES50-A, AES50-B, Card or Aux (1–6).
 - Provide a status filter for all inputs, inputs mapped to a physical M32 input, and inputs not mapped to a physical M32 input. This filter must not change stored mappings.
 - Do not model a physical patch panel, intermediate port, normalled connection or thru path.
@@ -135,7 +135,7 @@ The initial output-mapping increment is implemented in UAT: destinations can be 
 - FX Returns 1–4 Left/Right are visible in channel mapping but cannot be assigned a physical input.
 - Stereo physical-input allocations are validated; M32 channel mappings independently support channel strips CH 01–32 and Aux 1–6.
 - Stagebox socket labels are editable and remain associated with their stagebox identity.
-- Every stagebox XLR socket can be mapped directly to an M32 physical input in the supported input banks.
+- Every stagebox XLR socket can be mapped directly to an M32 physical input in the supported input banks, with source-library name, stagebox/socket label and physical input visible together in the mapping view.
 - Duplicate or conflicting physical-input assignments are clearly reported.
 - Export then import round-trips the entire configuration without losing library entries, stageboxes, positions, names or assignments.
 - Import errors leave the current workspace unchanged.
