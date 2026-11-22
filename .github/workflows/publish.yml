@@ -13,6 +13,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: m32-setup-pages
@@ -22,38 +24,71 @@ jobs:
   publish:
     name: ${{ inputs.target }}
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
     steps:
       - name: Check out source
         uses: actions/checkout@v7
 
-      - name: Create publication directory
+      # Keep gh-pages as a durable archive of the published site so that
+      # previous production versions survive subsequent Pages deployments.
+      - name: Check out published-site archive
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: previous-site
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Assemble site
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p publish
-          cp index.html app.js styles.css publish/
+          mkdir -p site
 
-          if [[ "${{ inputs.target }}" == "publish to prod" ]]; then
+          if [[ -d previous-site ]]; then
+            rsync -a --exclude='.git/' previous-site/ site/
+          fi
+
+          if [[ "${{ inputs.target }}" == "publish to dev" ]]; then
+            mkdir -p site/dev
+            cp index.html app.js styles.css site/dev/
+          else
             VERSION="v$(date -u +'%Y.%m.%d')-${GITHUB_RUN_NUMBER}"
-            mkdir -p "publish/versions/${VERSION}"
-            cp index.html app.js styles.css "publish/versions/${VERSION}/"
+            cp index.html app.js styles.css site/
+            mkdir -p "site/versions/${VERSION}"
+            cp index.html app.js styles.css "site/versions/${VERSION}/"
             echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
           fi
 
-      - name: Publish to GitHub Pages
+          touch site/.nojekyll
+
+      - name: Save published-site archive
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./publish
-          destination_dir: ${{ inputs.target == 'publish to dev' && 'dev' || '.' }}
+          publish_dir: ./site
           keep_files: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./site
+          include-hidden-files: true
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
 
       - name: Write publication summary
         shell: bash
+        env:
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
           set -euo pipefail
-          SITE_URL="https://jaredchurch.github.io/m32-setup"
+          SITE_URL="${SITE_URL%/}"
 
           if [[ "${{ inputs.target }}" == "publish to dev" ]]; then
             PUBLISHED_URL="${SITE_URL}/dev/"
