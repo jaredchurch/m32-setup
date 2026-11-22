@@ -66,7 +66,7 @@ $("add-library").onclick=addLib;
 $("add-assignment-btn").onclick=()=>{const id=$("add-assignment").value,l=config.library.find(x=>x.id===id);if(!l)return;const used=config.service.assignments.reduce((n,a)=>n+(config.library.find(x=>x.id===a.libraryId)?.mode==="stereo"?2:1),0);config.service.assignments.push({id:uid(),libraryId:id,source:"AES50-A",input:Math.min(48,used+1),desk:Math.min(32,used+1)});render()};
 $("service-name").onchange=e=>{config.service.name=e.target.value;persist()};$("service-date").onchange=e=>{config.service.date=e.target.value;persist()};
 $("assignment-list").addEventListener("change",e=>{const a=config.service.assignments.find(x=>x.id===e.target.dataset.a);if(!a)return;const f=e.target.dataset.field;if(f==="source")a.source=e.target.value;else if(f==="input")a.input=+e.target.value;else if(f==="desk")a.desk=+e.target.value;render()});
-$("library-list").addEventListener("click",e=>{
+$("library").addEventListener("click",e=>{
 const editId=e.target.dataset.editLib;if(editId){libraryEditId=editId;renderLibrary();return}
 const cancelId=e.target.dataset.cancelLib;if(cancelId){libraryEditId=null;renderLibrary();return}
 const saveId=e.target.dataset.saveLib;if(saveId){const card=e.target.closest("[data-edit-card]"),item=config.library.find(x=>x.id===saveId);if(!card||!item)return;const val=field=>card.querySelector('[data-edit-field="'+field+'"]').value.trim();const name=val("name");if(!name)return alert("Enter a source name.");item.name=name;item.category=val("category");item.mode=val("mode");item.vocalRole=val("vocalRole");item.notes=val("notes");libraryEditId=null;render();return}
