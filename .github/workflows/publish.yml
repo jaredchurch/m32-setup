@@ -24,6 +24,9 @@ concurrency:
 jobs:
   publish:
     name: ${{ inputs.target }}
+    # Development can be published from any branch. Production is restricted
+    # to main even if the GitHub Pages environment allows other branches.
+    if: ${{ inputs.target != 'publish to prod' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
