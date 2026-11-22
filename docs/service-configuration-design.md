@@ -12,7 +12,7 @@ Provide a reusable planning workspace for an M32 service. The application models
 - **Stagebox:** a named physical input device represented on the stage layout. It has a display name, configurable XLR input sockets, optional RJ45 network sockets, a stage position and notes.
 - **Stagebox input:** an individual XLR socket on a stagebox. Each socket can be labelled and associated with a source.
 - **Input mapping:** the direct assignment from a stagebox XLR socket to an M32 physical input. There is no intermediate patch-panel equipment in the application model.
-- **Desk channel:** an M32 channel strip/fader (CH 01–32) receiving a physical input. This assignment is separate from input mapping.
+- **Desk channel:** an M32 channel strip/fader (CH 01–32) receiving a physical input. The input-mapping view can record the intended desk-channel/fader assignment for each stagebox input separately from its physical input target; the service lineup also retains its own source-based channel allocation.
 - **Library item:** a reusable performer/instrument/source definition that exists independently of whether it is selected for a particular service.
 - **Service assignment:** the use of a library item in one service, with its physical input and desk-channel allocation.
 
@@ -62,9 +62,11 @@ The library may contain more items than the 32 desk channels. Only items assigne
 
 - Provide a mapping view that lists every XLR input socket on every stagebox, with text search across stagebox names, input labels, associated source names and existing M32 physical input targets.
 - Allow each stagebox XLR input to map directly to any available M32 physical input target in Local, AES50-A, AES50-B, Card or Aux (1–6).
+- Allow each stagebox XLR input to be assigned independently to an M32 desk channel/fader (CH 01–32), with duplicate desk-channel assignments clearly identified.
+- Provide a status filter for all inputs, inputs mapped to a physical M32 input, and inputs not mapped to a physical M32 input. This filter must not change stored mappings.
 - Do not model a physical patch panel, intermediate port, normalled connection or thru path.
 - Detect duplicate M32 input destinations and duplicate source socket mappings; clearly identify conflicts rather than silently resolving them.
-- Keep this mapping separate from service lineup assignment to desk channels.
+- Keep the physical input target and desk-channel/fader assignment as separate fields and mappings. The mapping view is a convenient per-stagebox-input planning surface; it does not silently rewrite service lineup allocations.
 - Include all stagebox socket labels and direct input mappings in configuration import/export.
 
 ### 5. M32 output mapping
