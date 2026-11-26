@@ -222,7 +222,10 @@ $("scene-export-menu-button").disabled=false;
 let stored=false;try{stored=JSON.parse(localStorage.getItem(STORE)||"null")?.sceneBase?.text===scene.rawText}catch(e){};
 $("scene-export-status").textContent=stored?"Base scene stored in this browser. Export the original unchanged or export a modified copy using the current M32 channel mappings.":"Scene loaded for this session, but browser storage could not be confirmed. Export the original before closing this tab.";
 $("scene-summary").textContent=scene.filename+" · format "+(scene.version||"unknown")+" · "+scene.channels.length+" input channels · "+scene.buses.length+" buses · "+scene.dcas.length+" DCAs · "+scene.outputs.length+" output routes · "+(stored?"Stored locally":"Not saved for next session");
-$("scene-details").innerHTML='<div class="scroll"><table><thead><tr><th>Add</th><th>Desk channel</th><th>Scene source name</th></tr></thead><tbody>'+scene.channels.map((c,i)=>'<tr><td><input type="checkbox" data-scene-channel="'+i+'" checked></td><td>CH '+String(c.n).padStart(2,"0")+'</td><td>'+esc(c.name||("CH "+c.n))+'</td></tr>').join("")+'</tbody></table></div>';
+$("scene-details").innerHTML='<div class="scroll"><table><thead><tr><th><label><input id="scene-channel-select-all" type="checkbox" checked aria-label="Select all channels for import"> All</label></th><th>Desk channel</th><th>Scene source name</th></tr></thead><tbody>'+scene.channels.map((c,i)=>'<tr><td><input type="checkbox" data-scene-channel="'+i+'" checked aria-label="Import CH '+String(c.n).padStart(2,"0")+'"></td><td>CH '+String(c.n).padStart(2,"0")+'</td><td>'+esc(c.name||("CH "+c.n))+'</td></tr>').join("")+'</tbody></table></div>';
+const selectAll=$("scene-channel-select-all"),channelChecks=[...$("scene-details").querySelectorAll("[data-scene-channel]")];
+selectAll.onchange=()=>{channelChecks.forEach(check=>check.checked=selectAll.checked);selectAll.indeterminate=false};
+channelChecks.forEach(check=>check.onchange=()=>{const selected=channelChecks.filter(item=>item.checked).length;selectAll.checked=selected===channelChecks.length;selectAll.indeterminate=selected>0&&selected<channelChecks.length});
 $("import-scene-sources").disabled=!scene.channels.length;
 }
 $("scene-file").onchange=async e=>{
