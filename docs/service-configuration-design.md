@@ -142,4 +142,13 @@ The initial output-mapping increment is implemented in UAT: destinations can be 
 - Import errors leave the current workspace unchanged.
 - No private scene or performer data is transmitted to a server.
 
-- Scene export must offer Windows (CRLF) and Unix (LF) line-ending options.
+- Modified scene export must offer Unix (LF) and Windows (CRLF) line-ending options, with Unix (LF) selected by default.
+
+
+## Base scene storage and export
+
+- When a user loads a valid M32 `.scn` file, store the complete original text in the browser's local workspace storage, not merely its filename or parsed channel list.
+- Restore the stored base scene when the app is reopened in the same browser profile, so the user does not need to upload it again.
+- Provide two independent exports: the exact original scene unchanged (including original line endings), and a modified copy with configured M32 channel-to-physical-input mappings applied.
+- The modified export offers Unix (LF) and Windows (CRLF) line endings, defaulting to Unix (LF). The stored original must never be modified by exporting.
+- Include the stored base scene in configuration backup/import so a workspace backup can carry its scene with it. Clearly report if browser storage quota prevents saving the scene.

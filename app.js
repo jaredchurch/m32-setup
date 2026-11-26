@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id), STORE="m32-service-config-v1", FORMAT="m32-service-configuration";
 const uid=()=> "id-"+Math.random().toString(36).slice(2,10);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const fresh=()=>({format:FORMAT,schemaVersion:1,metadata:{updatedAt:new Date().toISOString()},service:{name:"",date:"",assignments:[]},library:[],stage:{width:1000,height:560,stageboxes:[]},connections:{stageToM32:[],channelToInput:[],m32ToDestinations:[]},outputs:{destinations:[]},sceneReference:null});
+const fresh=()=>({format:FORMAT,schemaVersion:1,metadata:{updatedAt:new Date().toISOString()},service:{name:"",date:"",assignments:[]},library:[],stage:{width:1000,height:560,stageboxes:[]},connections:{stageToM32:[],channelToInput:[],m32ToDestinations:[]},outputs:{destinations:[]},sceneReference:null,sceneBase:null});
 let config=fresh(),scene=null,drag=null,libraryEditId=null;
 function persist(){config.metadata.updatedAt=new Date().toISOString();try{localStorage.setItem(STORE,JSON.stringify(config));$("save-state").textContent="Saved in this browser · "+new Date().toLocaleTimeString();$("status").textContent="Saved locally"}catch(e){$("save-state").textContent="Browser storage unavailable; export a backup."}}
 function loadStored(){try{const raw=localStorage.getItem(STORE);if(raw){const parsed=JSON.parse(raw);validate(parsed);config=parsed}}catch(e){console.warn("Stored configuration could not be loaded",e)}}
@@ -40,7 +40,7 @@ const bases={Local:0,"AES50-A":32,"AES50-B":80,Card:128,Aux:160},n=+number,limit
 if(!Object.prototype.hasOwnProperty.call(bases,source)||!Number.isInteger(n)||n<1||n>limit)throw Error("Invalid M32 physical input: "+source+" "+number);
 return bases[source]+n;
 }
-function buildSceneText(lines,mappings,lineEnding="windows"){
+function buildSceneText(lines,mappings,lineEnding="unix"){
 const assignments=new Map();
 (mappings||[]).forEach(m=>{
 const match=String(m.channel||"").match(/^(CH|Aux):(\d{1,2})$/);
@@ -209,10 +209,51 @@ $("output-mapping-list").addEventListener("change",e=>{const destKey=e.target.da
 $("export-config").onclick=()=>{config.metadata.exportedAt=new Date().toISOString();download("m32-service-configuration.json",config)};
 $("import-config").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const candidate=JSON.parse(await f.text());validate(candidate);const summary=candidate.library.length+" library sources, "+candidate.stage.stageboxes.length+" stageboxes, "+candidate.connections.stageToM32.length+" direct M32 input mappings, "+candidate.connections.channelToInput.length+" M32 channel mappings, "+candidate.connections.m32ToDestinations.length+" M32 output mappings, "+candidate.outputs.destinations.length+" output destinations and "+candidate.service.assignments.length+" service assignments";if(!confirm("Import this complete configuration?\n\n"+summary+"\n\nThis replaces the current browser workspace."))return;config=candidate;render();alert("Configuration imported and saved locally.")}catch(err){alert("Import rejected. Your current workspace has not been changed.\n\n"+err.message)}finally{e.target.value=""}};
 $("reset-config").onclick=()=>{if(!confirm("Reset the entire local workspace? Export a backup first if you need to keep it."))return;config=fresh();localStorage.removeItem(STORE);render()};
-$("scene-file").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;scene=null;$("export-scene").disabled=true;$("scene-export-status").textContent="Reading base scene…";try{const txt=await f.text(),lines=txt.split(/\r?\n/),channels=[],buses=[],dcas=[],outputs=[],channelBlocks={};let title=f.name,version="";const h=lines.find(x=>x.startsWith("#"));const hm=h?.match(/^#([^#]+)#\s+"([^"]*)"/);if(hm){version=hm[1];title=hm[2]||title}for(const line of lines){let m;if(m=line.match(/^\/ch\/(\d{2})\//)){(channelBlocks[m[1]] ||= []).push(line);if(m=line.match(/^\/ch\/(\d{2})\/config\s+"([^"]*)"\s*(.*)$/))channels.push({n:+m[1],name:m[2].trim(),selected:true})}else if(m=line.match(/^\/bus\/(\d{2})\/config\s+"([^"]*)"/))buses.push(m[2]);else if(m=line.match(/^\/dca\/(\d+)\/config\s+"([^"]*)"/))dcas.push(m[2]);else if(m=line.match(/^\/outputs\/(main|aux|p16|aes|rec)\/(\d{2})\s+(.+)$/))outputs.push(m[0])}channels.forEach(c=>c.configLines=channelBlocks[String(c.n).padStart(2,"0")]||[]);scene={filename:f.name,title,version,channels,buses,dcas,outputs,lines};$("export-scene").disabled=false;$("scene-export-status").textContent="Base scene loaded. Export will update only mapped CH/Aux input-source assignments and preserve all other scene entries.";$("scene-summary").textContent=f.name+" · format "+(version||"unknown")+" · "+channels.length+" input channels · "+buses.length+" buses · "+dcas.length+" DCAs · "+outputs.length+" output routes. Select channel names to add."; $("scene-details").innerHTML='<div class="scroll"><table><thead><tr><th>Add</th><th>Desk channel</th><th>Scene source name</th></tr></thead><tbody>'+channels.map((c,i)=>'<tr><td><input type="checkbox" data-scene-channel="'+i+'" checked></td><td>CH '+String(c.n).padStart(2,"0")+'</td><td>'+esc(c.name||("CH "+c.n))+'</td></tr>').join("")+'</tbody></table></div>'; $("import-scene-sources").disabled=!channels.length;config.sceneReference={filename:f.name,title,version};persist()}catch(err){scene=null;$("export-scene").disabled=true;$("scene-export-status").textContent="Scene could not be loaded; export is unavailable.";alert("Could not read this M32 scene file: "+err.message)}};
-$("export-scene").onclick=()=>{if(!scene?.lines)return alert("Load a known-good M32 scene first.");try{const text=buildSceneText(scene.lines,config.connections.channelToInput,$("scene-line-endings").value),base=(config.service.name||scene.title||"m32-service").trim().replace(/[^a-z0-9._-]+/gi,"-").replace(/^-+|-+$/g,"")||"m32-service",filename=base.toLowerCase().endsWith(".scn")?base:base+".scn";downloadText(filename,text);$("scene-export-status").textContent="Exported "+config.connections.channelToInput.length+" channel input assignment(s) from "+scene.filename+". Other scene settings were preserved."; }catch(err){alert("Scene export stopped. No file was generated.\n\n"+err.message);$("scene-export-status").textContent="Export blocked: "+err.message}};
+function parseSceneText(txt,filename){
+const lines=txt.split(/\r?\n/),channels=[],buses=[],dcas=[],outputs=[],channelBlocks={};let title=filename,version="";
+const h=lines.find(x=>x.startsWith("#")),hm=h?.match(/^#([^#]+)#\s+"([^"]*)"/);if(hm){version=hm[1];title=hm[2]||title}
+for(const line of lines){let m;if(m=line.match(/^\/ch\/(\d{2})\//)){(channelBlocks[m[1]] ||= []).push(line);if(m=line.match(/^\/ch\/(\d{2})\/config\s+"([^"]*)"\s*(.*)$/))channels.push({n:+m[1],name:m[2].trim(),selected:true})}else if(m=line.match(/^\/bus\/(\d{2})\/config\s+"([^"]*)"/))buses.push(m[2]);else if(m=line.match(/^\/dca\/(\d+)\/config\s+"([^"]*)"/))dcas.push(m[2]);else if(m=line.match(/^\/outputs\/(main|aux|p16|aes|rec)\/(\d{2})\s+(.+)$/))outputs.push(m[0])}
+channels.forEach(c=>c.configLines=channelBlocks[String(c.n).padStart(2,"0")]||[]);
+return {filename,title,version,channels,buses,dcas,outputs,lines,rawText:txt};
+}
+function displayScene(){
+if(!scene)return;
+$("export-scene-original").disabled=false;$("export-scene-modified").disabled=false;
+let stored=false;try{stored=JSON.parse(localStorage.getItem(STORE)||"null")?.sceneBase?.text===scene.rawText}catch(e){};
+$("scene-export-status").textContent=stored?"Base scene stored in this browser. Export the original unchanged or export a modified copy using the current M32 channel mappings.":"Scene loaded for this session, but browser storage could not be confirmed. Export the original before closing this tab.";
+$("scene-summary").textContent=scene.filename+" · format "+(scene.version||"unknown")+" · "+scene.channels.length+" input channels · "+scene.buses.length+" buses · "+scene.dcas.length+" DCAs · "+scene.outputs.length+" output routes · "+(stored?"Stored locally":"Not saved for next session");
+$("scene-details").innerHTML='<div class="scroll"><table><thead><tr><th>Add</th><th>Desk channel</th><th>Scene source name</th></tr></thead><tbody>'+scene.channels.map((c,i)=>'<tr><td><input type="checkbox" data-scene-channel="'+i+'" checked></td><td>CH '+String(c.n).padStart(2,"0")+'</td><td>'+esc(c.name||("CH "+c.n))+'</td></tr>').join("")+'</tbody></table></div>';
+$("import-scene-sources").disabled=!scene.channels.length;
+}
+$("scene-file").onchange=async e=>{
+const f=e.target.files?.[0];if(!f)return;
+scene=null;$("export-scene-original").disabled=true;$("export-scene-modified").disabled=true;$("scene-export-status").textContent="Reading and storing base scene…";
+try{
+const txt=await f.text(),parsed=parseSceneText(txt,f.name);
+if(!parsed.lines.length)throw Error("The scene file is empty.");
+scene=parsed;config.sceneBase={filename:f.name,title:parsed.title,version:parsed.version,text:txt};config.sceneReference={filename:f.name,title:parsed.title,version:parsed.version};
+persist();displayScene();
+}catch(err){scene=null;config.sceneBase=null;$("export-scene-original").disabled=true;$("export-scene-modified").disabled=true;$("scene-export-status").textContent="Scene could not be stored; export is unavailable.";alert("Could not read or store this M32 scene file: "+err.message)}
+};
+function sceneExportFilename(){
+const base=(config.service.name||scene?.title||"m32-service").trim().replace(/[^a-z0-9._-]+/gi,"-").replace(/^-+|-+$/g,"")||"m32-service";
+return base.toLowerCase().endsWith(".scn")?base:base+".scn";
+}
+$("export-scene-original").onclick=()=>{
+if(!config.sceneBase?.text)return alert("Load a base M32 scene first.");
+downloadText(scene?.filename||config.sceneBase.filename||"original-scene.scn",config.sceneBase.text);
+$("scene-export-status").textContent="Exported the original scene unchanged, including its original line endings and content.";
+};
+$("export-scene-modified").onclick=()=>{
+if(!scene?.lines)return alert("Load a base M32 scene first.");
+try{
+const output=buildSceneText(scene.lines,config.connections.channelToInput,$("scene-line-endings").value);
+downloadText(sceneExportFilename(),output);
+$("scene-export-status").textContent="Exported a modified copy with "+config.connections.channelToInput.length+" channel input assignment(s). The stored original remains unchanged.";
+}catch(err){alert("Scene export stopped. No file was generated.\\n\\n"+err.message);$("scene-export-status").textContent="Export blocked: "+err.message}
+};
 $("import-scene-sources").onclick=()=>{if(!scene)return;const chosen=[...$("scene-details").querySelectorAll("[data-scene-channel]:checked")].map(x=>scene.channels[+x.dataset.sceneChannel]);let added=0;chosen.forEach(c=>{const name=(c.name||("CH "+c.n)).trim();if(!name)return;const sceneConfig={format:"M32 .scn channel block",sourceFile:scene.filename,channelNumber:c.n,channelName:name,lines:[...(c.configLines||[])]};let importName=name,suffix=2;while(config.library.some(x=>x.name.toLowerCase()===importName.toLowerCase())){importName=name+" ("+suffix+")";suffix++}config.library.push({id:uid(),name:importName,category:"Other",mode:"mono",notes:"Imported from "+scene.filename+" (M32 CH "+String(c.n).padStart(2,"0")+")"+(importName!==name?" · Original scene name: "+name:""),sceneConfig});added++});render();alert(added+" source"+(added===1?"":"s")+" imported. Duplicate names were given unique numbered suffixes.")};
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{tab(b.dataset.tab);if(b.dataset.tab==="channels")renderChannelMapping()}));
 $("open-scene-export").addEventListener("click",()=>{tab("console");$("scene-file").focus()});
-loadStored();$("service-name").value=config.service.name||"";$("service-date").value=config.service.date||"";render();
+loadStored();if(config.sceneBase&&typeof config.sceneBase.text==="string"){try{scene=parseSceneText(config.sceneBase.text,config.sceneBase.filename||"stored-scene.scn");displayScene()}catch(e){scene=null;console.warn("Stored M32 scene could not be restored",e)}}$("service-name").value=config.service.name||"";$("service-date").value=config.service.date||"";render();
 })();
