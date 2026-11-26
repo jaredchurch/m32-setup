@@ -64,7 +64,7 @@ const missing=[...assignments.keys()].filter(path=>!found.has(path));
 if(missing.length)throw Error("The base scene is missing required channel configuration: "+missing.join(", ")+". Load a complete M32 scene exported by M32-Edit.");
 return output.join(lineEnding==="unix"?"\n":"\r\n");
 }
-function downloadText(name,text){const u=URL.createObjectURL(new Blob([text],{type:"text/plain;charset=utf-8"})),a=document.createElement("a");a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function downloadText(name,text){const blob=new Blob([text],{type:"application/octet-stream"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;a.style.display="none";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
 function download(name,obj){const u=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:"application/json"})),a=document.createElement("a");a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function tab(name){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!==name)}
 function physicalOptions(value){return ["Local","AES50-A","AES50-B","Card","Aux"].map(s=>'<option '+(s===value?'selected':'')+'>'+s+'</option>').join("")}
@@ -218,39 +218,40 @@ return {filename,title,version,channels,buses,dcas,outputs,lines,rawText:txt};
 }
 function displayScene(){
 if(!scene)return;
-$("export-scene-original").disabled=false;$("export-scene-modified").disabled=false;
+$("scene-export-menu-button").disabled=false;
 let stored=false;try{stored=JSON.parse(localStorage.getItem(STORE)||"null")?.sceneBase?.text===scene.rawText}catch(e){};
 $("scene-export-status").textContent=stored?"Base scene stored in this browser. Export the original unchanged or export a modified copy using the current M32 channel mappings.":"Scene loaded for this session, but browser storage could not be confirmed. Export the original before closing this tab.";
 $("scene-summary").textContent=scene.filename+" · format "+(scene.version||"unknown")+" · "+scene.channels.length+" input channels · "+scene.buses.length+" buses · "+scene.dcas.length+" DCAs · "+scene.outputs.length+" output routes · "+(stored?"Stored locally":"Not saved for next session");
-$("scene-details").innerHTML='<div class="scroll"><table><thead><tr><th>Add</th><th>Desk channel</th><th>Scene source name</th></tr></thead><tbody>'+scene.channels.map((c,i)=>'<tr><td><input type="checkbox" data-scene-channel="'+i+'" checked></td><td>CH '+String(c.n).padStart(2,"0")+'</td><td>'+esc(c.name||("CH "+c.n))+'</td></tr>').join("")+'</tbody></table></div>';
+$("scene-details").innerHTML='<div class="scroll"><table><thead><tr><th><label><input id="scene-channel-select-all" type="checkbox" checked aria-label="Select all channels for import"> All</label></th><th>Desk channel</th><th>Scene source name</th></tr></thead><tbody>'+scene.channels.map((c,i)=>'<tr><td><input type="checkbox" data-scene-channel="'+i+'" checked aria-label="Import CH '+String(c.n).padStart(2,"0")+'"></td><td>CH '+String(c.n).padStart(2,"0")+'</td><td>'+esc(c.name||("CH "+c.n))+'</td></tr>').join("")+'</tbody></table></div>';
+const selectAll=$("scene-channel-select-all"),channelChecks=[...$("scene-details").querySelectorAll("[data-scene-channel]")];
+selectAll.onchange=()=>{channelChecks.forEach(check=>check.checked=selectAll.checked);selectAll.indeterminate=false};
+channelChecks.forEach(check=>check.onchange=()=>{const selected=channelChecks.filter(item=>item.checked).length;selectAll.checked=selected===channelChecks.length;selectAll.indeterminate=selected>0&&selected<channelChecks.length});
 $("import-scene-sources").disabled=!scene.channels.length;
 }
 $("scene-file").onchange=async e=>{
 const f=e.target.files?.[0];if(!f)return;
-scene=null;$("export-scene-original").disabled=true;$("export-scene-modified").disabled=true;$("scene-export-status").textContent="Reading and storing base scene…";
+scene=null;$("scene-export-menu-button").disabled=true;$("scene-export-menu").hidden=true;$("scene-export-menu-button").setAttribute("aria-expanded","false");$("scene-export-status").textContent="Reading and storing base scene…";
 try{
 const txt=await f.text(),parsed=parseSceneText(txt,f.name);
 if(!parsed.lines.length)throw Error("The scene file is empty.");
 scene=parsed;config.sceneBase={filename:f.name,title:parsed.title,version:parsed.version,text:txt};config.sceneReference={filename:f.name,title:parsed.title,version:parsed.version};
 persist();displayScene();
-}catch(err){scene=null;config.sceneBase=null;$("export-scene-original").disabled=true;$("export-scene-modified").disabled=true;$("scene-export-status").textContent="Scene could not be stored; export is unavailable.";alert("Could not read or store this M32 scene file: "+err.message)}
+}catch(err){scene=null;config.sceneBase=null;$("scene-export-menu-button").disabled=true;$("scene-export-status").textContent="Scene could not be stored; export is unavailable.";alert("Could not read or store this M32 scene file: "+err.message)}
 };
 function sceneExportFilename(){
 const base=(config.service.name||scene?.title||"m32-service").trim().replace(/[^a-z0-9._-]+/gi,"-").replace(/^-+|-+$/g,"")||"m32-service";
 return base.toLowerCase().endsWith(".scn")?base:base+".scn";
 }
+const exportMenu=$("scene-export-menu"),exportMenuButton=$("scene-export-menu-button");
+function closeExportMenu(){exportMenu.hidden=true;exportMenuButton.setAttribute("aria-expanded","false")}
+exportMenuButton.onclick=()=>{const open=exportMenu.hidden;exportMenu.hidden=!open;exportMenuButton.setAttribute("aria-expanded",String(open))};
+document.addEventListener("click",e=>{if(!e.target.closest(".scene-export-control"))closeExportMenu()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeExportMenu()});
 $("export-scene-original").onclick=()=>{
-if(!config.sceneBase?.text)return alert("Load a base M32 scene first.");
-downloadText(scene?.filename||config.sceneBase.filename||"original-scene.scn",config.sceneBase.text);
-$("scene-export-status").textContent="Exported the original scene unchanged, including its original line endings and content.";
+try{const original=config.sceneBase?.text;if(typeof original!=="string"||!original.length)throw Error("Load a base M32 scene first.");downloadText(scene?.filename||config.sceneBase.filename||"original-scene.scn",original);$("scene-export-status").textContent="Original scene download requested — content and line endings are unchanged.";closeExportMenu()}catch(err){$("scene-export-status").textContent="Original export failed: "+err.message;alert("Could not export original scene: "+err.message)}
 };
 $("export-scene-modified").onclick=()=>{
-if(!scene?.lines)return alert("Load a base M32 scene first.");
-try{
-const output=buildSceneText(scene.lines,config.connections.channelToInput,$("scene-line-endings").value);
-downloadText(sceneExportFilename(),output);
-$("scene-export-status").textContent="Exported a modified copy with "+config.connections.channelToInput.length+" channel input assignment(s). The stored original remains unchanged.";
-}catch(err){alert("Scene export stopped. No file was generated.\\n\\n"+err.message);$("scene-export-status").textContent="Export blocked: "+err.message}
+try{if(!scene?.lines)throw Error("Load a base M32 scene first.");const output=buildSceneText(scene.lines,config.connections.channelToInput,$("scene-line-endings").value);downloadText(sceneExportFilename(),output);$("scene-export-status").textContent="Modified scene download requested with "+config.connections.channelToInput.length+" channel input assignment(s). The stored original remains unchanged.";closeExportMenu()}catch(err){$("scene-export-status").textContent="Modified export blocked: "+err.message;alert("Could not export modified scene: "+err.message)}
 };
 $("import-scene-sources").onclick=()=>{if(!scene)return;const chosen=[...$("scene-details").querySelectorAll("[data-scene-channel]:checked")].map(x=>scene.channels[+x.dataset.sceneChannel]);let added=0;chosen.forEach(c=>{const name=(c.name||("CH "+c.n)).trim();if(!name)return;const sceneConfig={format:"M32 .scn channel block",sourceFile:scene.filename,channelNumber:c.n,channelName:name,lines:[...(c.configLines||[])]};let importName=name,suffix=2;while(config.library.some(x=>x.name.toLowerCase()===importName.toLowerCase())){importName=name+" ("+suffix+")";suffix++}config.library.push({id:uid(),name:importName,category:"Other",mode:"mono",notes:"Imported from "+scene.filename+" (M32 CH "+String(c.n).padStart(2,"0")+")"+(importName!==name?" · Original scene name: "+name:""),sceneConfig});added++});render();alert(added+" source"+(added===1?"":"s")+" imported. Duplicate names were given unique numbered suffixes.")};
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{tab(b.dataset.tab);if(b.dataset.tab==="channels")renderChannelMapping()}));
