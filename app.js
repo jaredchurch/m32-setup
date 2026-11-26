@@ -211,8 +211,8 @@ $("import-config").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;t
 $("reset-config").onclick=()=>{if(!confirm("Reset the entire local workspace? Export a backup first if you need to keep it."))return;config=fresh();localStorage.removeItem(STORE);render()};
 function parseSceneText(txt,filename){
 const lines=txt.split(/\r?\n/),channels=[],buses=[],dcas=[],outputs=[],channelBlocks={};let title=filename,version="";
-const h=lines.find(x=>x.startsWith("#")),hm=h?.match(/^#([^#]+)#\\s+"([^"]*)"/);if(hm){version=hm[1];title=hm[2]||title}
-for(const line of lines){let m;if(m=line.match(/^\\/ch\\/(\\d{2})\\//)){(channelBlocks[m[1]] ||= []).push(line);if(m=line.match(/^\\/ch\\/(\\d{2})\\/config\\s+"([^"]*)"\\s*(.*)$/))channels.push({n:+m[1],name:m[2].trim(),selected:true})}else if(m=line.match(/^\\/bus\\/(\\d{2})\\/config\\s+"([^"]*)"/))buses.push(m[2]);else if(m=line.match(/^\\/dca\\/(\\d+)\\/config\\s+"([^"]*)"/))dcas.push(m[2]);else if(m=line.match(/^\\/outputs\\/(main|aux|p16|aes|rec)\\/(\\d{2})\\s+(.+)$/))outputs.push(m[0])}
+const h=lines.find(x=>x.startsWith("#")),hm=h?.match(/^#([^#]+)#\s+"([^"]*)"/);if(hm){version=hm[1];title=hm[2]||title}
+for(const line of lines){let m;if(m=line.match(/^\/ch\/(\d{2})\//)){(channelBlocks[m[1]] ||= []).push(line);if(m=line.match(/^\/ch\/(\d{2})\/config\s+"([^"]*)"\s*(.*)$/))channels.push({n:+m[1],name:m[2].trim(),selected:true})}else if(m=line.match(/^\/bus\/(\d{2})\/config\s+"([^"]*)"/))buses.push(m[2]);else if(m=line.match(/^\/dca\/(\d+)\/config\s+"([^"]*)"/))dcas.push(m[2]);else if(m=line.match(/^\/outputs\/(main|aux|p16|aes|rec)\/(\d{2})\s+(.+)$/))outputs.push(m[0])}
 channels.forEach(c=>c.configLines=channelBlocks[String(c.n).padStart(2,"0")]||[]);
 return {filename,title,version,channels,buses,dcas,outputs,lines,rawText:txt};
 }
