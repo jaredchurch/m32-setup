@@ -40,7 +40,7 @@ const bases={Local:0,"AES50-A":32,"AES50-B":80,Card:128,Aux:160},n=+number,limit
 if(!Object.prototype.hasOwnProperty.call(bases,source)||!Number.isInteger(n)||n<1||n>limit)throw Error("Invalid M32 physical input: "+source+" "+number);
 return bases[source]+n;
 }
-function buildSceneText(lines,mappings,lineEnding="windows"){
+function buildSceneText(lines,mappings,lineEnding="unix"){
 const assignments=new Map();
 (mappings||[]).forEach(m=>{
 const match=String(m.channel||"").match(/^(CH|Aux):(\d{1,2})$/);
