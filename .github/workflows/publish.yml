@@ -16,10 +16,7 @@ on:
           - publish to prod
 
 permissions:
-  contents: write
-  actions: write
-  pages: write
-  id-token: write
+  contents: read
 
 concurrency:
   group: m32-setup-pages
@@ -27,7 +24,7 @@ concurrency:
 
 jobs:
   publish:
-    name: ${{ github.ref == 'refs/heads/UAT' && 'Publish UAT' || 'Publish Production' }}
+    name: Build ${{ github.ref == 'refs/heads/UAT' && 'UAT' || 'Production' }} Pages artifact
     if: >-
       (github.event_name == 'push' &&
        (github.ref == 'refs/heads/UAT' || github.ref == 'refs/heads/main')) ||
@@ -35,11 +32,12 @@ jobs:
        ((inputs.target == 'publish to UAT' && github.ref == 'refs/heads/UAT') ||
         (inputs.target == 'publish to prod' && github.ref == 'refs/heads/main')))
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
+      pages: read
     outputs:
       target: ${{ steps.target.outputs.value }}
+      version: ${{ steps.assemble.outputs.version }}
     steps:
       - name: Determine publication target
         id: target
@@ -69,6 +67,7 @@ jobs:
         uses: actions/configure-pages@v6
 
       - name: Assemble site
+        id: assemble
         shell: bash
         env:
           TARGET: ${{ steps.target.outputs.value }}
@@ -91,13 +90,12 @@ jobs:
             cp index.html app.js styles.css site/
             mkdir -p "site/versions/${VERSION}"
             cp index.html app.js styles.css "site/versions/${VERSION}/"
-            echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           fi
 
           touch site/.nojekyll
 
-      # Use git directly rather than a Node-based publishing action. This
-      # keeps the workflow on supported action runtimes and retains history.
+      # Keep the archive history without relying on a Node-based publishing action.
       - name: Save published-site archive
         shell: bash
         run: |
@@ -113,9 +111,6 @@ jobs:
             git -C previous-site push origin HEAD:gh-pages
           fi
 
-      # Give each workflow attempt its own artifact name. GitHub retains artifacts
-      # from failed attempts; reusing "github-pages" makes deploy-pages find
-      # multiple matches when a failed job is rerun.
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
@@ -123,6 +118,17 @@ jobs:
           path: ./site
           include-hidden-files: true
 
+  deploy:
+    name: Deploy ${{ needs.publish.outputs.target == 'publish to UAT' && 'UAT' || 'Production' }} to GitHub Pages
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
@@ -133,7 +139,8 @@ jobs:
         shell: bash
         env:
           SITE_URL: ${{ steps.deployment.outputs.page_url }}
-          TARGET: ${{ steps.target.outputs.value }}
+          TARGET: ${{ needs.publish.outputs.target }}
+          VERSION: ${{ needs.publish.outputs.version }}
         run: |
           set -euo pipefail
           SITE_URL="${SITE_URL%/}"
@@ -160,12 +167,15 @@ jobs:
 
   sync-main-to-uat:
     name: Merge main into UAT and publish UAT
-    needs: publish
+    needs: deploy
     if: >-
-      needs.publish.result == 'success' &&
+      needs.deploy.result == 'success' &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
